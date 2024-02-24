@@ -1,13 +1,15 @@
 import socket
 import threading
 import os
-#import Client.py
+from ClientClass import Client
 
 IP = socket.gethostbyname(socket.gethostname())
 PORT = 6969
 ADDR = (IP, PORT)
-DISCONNECT_MSG = "!DISCONNECT"
-
+#DISCONNECT_MSG = "!DISCONNECT"
+clientFile = r"C:\Users\rlaal\Desktop\Clients\Client"      ## need to be changed on a different machine !!
+folderPath = r"C:\Users\rlaal\Desktop\Clients"
+clientsList =[]
 
 
 def unique_Username(name, clients):
@@ -27,11 +29,12 @@ def unique_Username(name, clients):
 def delete_Client(fileName):
     """Deletes the file of the client"""
     fileName = fileName+".txt"
-    folderPath = "/Users/CrispyBacon/Desktop/Disscord Clients/"
+    #folderPath = ""    
     try:
         # Iterate through all files in the folder
-        for file in os.listdir(folderPath):
-            filePath = os.path.join(folderPath, file)
+        for file in os.listdir(clientFile):
+            #filePath = os.path.join(folderPath, file)
+            filePath = os.path.join(clientFile, file)
 
             # Makes sure that the right file is deleted
             if os.path.isfile(filePath) and filePath.endswith(fileName):
@@ -44,8 +47,9 @@ def delete_Client(fileName):
 def initialize_Clients():
     """Creates an array of clients to be manipulated in the server"""
     clients=[]
-    folderPath = "/Users/CrispyBacon/Desktop/Disscord Clients/"
+    #folderPath = r"C:\Users\rlaal\Desktop"      ## need to be changed on a different machine !!
     for file in os.listdir(folderPath):
+        #with open(os.path.join(folderPath,file), "r") as f:
         with open(os.path.join(folderPath,file), "r") as f:
             details = f.readlines()
             client = Client(details[0],details[1],details[2])
@@ -58,11 +62,11 @@ def save_Client(client):
     """Saves the clients details into a text file on the server"""
     try:
         # File path to save details of the client
-        file_name = "/Users/CrispyBacon/Desktop/Disscord Clients/"+client.getName()+".txt"
-        file = open(file_name,"w")
+        file_name = clientFile+client.getName()+".txt"
+        file = open(file_name, "w")
 
         # Writing data to client's file
-        print(client.getUsername(),file=file)
+        print(client.getName(),file=file)
         print(client.getPassword(),file=file)
         print(client.getStatus(),file=file)
         file.close()
@@ -84,7 +88,7 @@ def sign_up():
     username = input("USERNAME: ")
     
     # look up username in the user file
-    while (unique_Username(name, clientsList)):   # if username taken
+    while (unique_Username(username, clientsList)):   # if username taken
         username = input("DUPLICATE. ENTER ANOTHER USERNAME: ")
         
     password = input("PASSWORD: ")
@@ -98,22 +102,27 @@ def handle_client(conn, addr):
 
     connected = True
     while connected:
-        msg = conn.recv(1024).decode()
+        #msg = conn.recv(1024).decode()
 
 
         ## menu here ??
+        menu = input("Type 1 for sign up, 2 to exit: ")
+        if (menu == "1"):
+            sign_up()
+        else:
+            break
 
 
         
-        if msg == DISCONNECT_MSG:
-            connected = False
+        #if msg == DISCONNECT_MSG:
+           # connected = False
 
-        print(f"[{addr}] {msg}")
+        #print(f"[{addr}] {msg}")
         # msg = f"Msg received: {msg}"
 
         
         
-        conn.send(msg.encode)
+        #conn.send(msg.encode)
 
     conn.close()
 
@@ -124,10 +133,15 @@ def main():
     server.bind(ADDR)
     server.listen()
     print(f"[LISTENING] Server is listening on {IP}:{PORT}")
+    clientsList = initialize_Clients()
 
+
+    print("list of clients:")
+    for client in clientsList:    # printing the list of clients
+        print(client.toString())
+    
     while True:
         conn, addr = server.accept()
-        clientsList = initialize_Clients()
         thread = threading.Thread(target=handle_client, args=(conn, addr))
         thread.start()
         print(f"[ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
