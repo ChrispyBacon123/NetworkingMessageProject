@@ -4,9 +4,8 @@ import os
 from ClientClass import Client
 
 IP = socket.gethostbyname(socket.gethostname())
-PORT = 6969
+PORT = 6970
 ADDR = (IP, PORT)
-#DISCONNECT_MSG = "!DISCONNECT"
 clientFile = r"C:\Users\rlaal\Desktop\Clients\Client"      ## need to be changed on a different machine !!
 folderPath = r"C:\Users\rlaal\Desktop\Clients"
 clientsList =[]
@@ -62,7 +61,7 @@ def save_Client(client):
     """Saves the clients details into a text file on the server"""
     try:
         # File path to save details of the client
-        file_name = clientFile+client.getName()+".txt"
+        file_name = clientFile+client.getName()+".txt"   ## without ""clientFile+", the new file gets saved in the same directory as the codes
         file = open(file_name, "w")
 
         # Writing data to client's file
@@ -77,10 +76,25 @@ def save_Client(client):
 
 def sign_in():
     username = input("USERNAME: ")
-    '''
-    if (unique_Username(name, clientsList)
-        if password = input("PASSWORD: ")
-    '''
+    
+    if (unique_Username(username, clientsList)):
+        for client in clientsList:
+            if username == client.getName():
+                correctPassword = client.getPassword()  # get the password of the existing client
+                break
+        password = input("PASSWORD: ")
+        if password == correctPassword:
+            print("signing in stuff. make it happen beep")
+            print("list of clients:")
+            for client in clientsList:    # printing the list of clients
+                print(client.toString())
+
+
+            
+        else:
+            print("wrong password")
+    else:
+        print("You must sign up first!")
 
 
 
@@ -106,11 +120,13 @@ def handle_client(conn, addr):
 
 
         ## menu here ??
-        menu = input("Type 1 for sign up, 2 to exit: ")
+        menu = input("Type 1 for sign up, 2 to sign in, 3 to exit: ")
         if (menu == "1"):
             sign_up()
-        else:
-            break
+        elif (menu == "2"):
+            sign_in()
+        elif (menu == "3"):
+            connected = False
 
 
         
@@ -123,17 +139,18 @@ def handle_client(conn, addr):
         
         
         #conn.send(msg.encode)
-
+    print(f"[NEW CONNECTION] {addr} disconnected.")
     conn.close()
+    
 
-
+clientsList = initialize_Clients()
 def main():
     print("[STARTING] Server is starting...")
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind(ADDR)
     server.listen()
     print(f"[LISTENING] Server is listening on {IP}:{PORT}")
-    clientsList = initialize_Clients()
+    #clientsList = initialize_Clients()
 
 
     print("list of clients:")
