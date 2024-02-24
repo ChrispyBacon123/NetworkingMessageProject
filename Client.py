@@ -1,11 +1,11 @@
-from socket import *
+import socket
 
 
 
-
-serverName = '196.24.144.227'
+serverName = socket.gethostbyname(socket.gethostname())
+#serverName = '196.24.144.227'
 serverPort = 6969
-clientSocket = socket(AF_INET, SOCK_STREAM)
+clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 clientSocket.connect((serverName,serverPort))
 
 
