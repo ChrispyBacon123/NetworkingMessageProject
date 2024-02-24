@@ -1,7 +1,7 @@
 import socket
 import threading
 import os
-import Client.py
+#import Client.py
 
 IP = socket.gethostbyname(socket.gethostname())
 PORT = 6969
@@ -73,10 +73,10 @@ def save_Client(client):
 
 def sign_in():
     username = input("USERNAME: ")
-    
-    if (unique_Username(name, clientsList):
+    '''
+    if (unique_Username(name, clientsList)
         if password = input("PASSWORD: ")
-    
+    '''
 
 
 
@@ -99,6 +99,11 @@ def handle_client(conn, addr):
     connected = True
     while connected:
         msg = conn.recv(1024).decode()
+
+
+        ## menu here ??
+
+
         
         if msg == DISCONNECT_MSG:
             connected = False
@@ -106,7 +111,7 @@ def handle_client(conn, addr):
         print(f"[{addr}] {msg}")
         # msg = f"Msg received: {msg}"
 
-        ## menu here ??
+        
         
         conn.send(msg.encode)
 
