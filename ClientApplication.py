@@ -19,7 +19,7 @@ def create_Header(messageType,body):
     return out
 
 def request_retransmission():
-    
+    r = '' # place holder so there is no error
 
 
 
