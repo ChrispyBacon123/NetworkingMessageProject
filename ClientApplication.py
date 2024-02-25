@@ -18,8 +18,8 @@ def create_Header(messageType,body):
     out = out+size+body
     return out
 
-def request_retransmission():
-    r = '' # place holder so there is no error
+#def request_retransmission(socket):
+    
 
 
 
@@ -120,5 +120,6 @@ while flag != True:
         continue
     else:
         print('Invalid message') # In case the message does not have a valid header
+        print(header)
     
 # Exits the loop when the user logs out of the server
