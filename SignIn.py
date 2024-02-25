@@ -28,3 +28,14 @@ def sign_in(connectionSocket):
         connectionSocket.send(message.encode())
         return False
     
+'''
+Add this in handle_client
+
+    if option == "1":
+        if (sign_in(connectionSocket)) ## if it is an existing account, it returns True
+        ## proceed to menu
+
+    else:
+            # it is not an existing account, do something
+
+'''
