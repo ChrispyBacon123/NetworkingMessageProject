@@ -1,15 +1,35 @@
 import socket
 import threading
 import os
-import time
+import time 
+from ClientClass import *
 #import Client.py
 
 clientsList =[]
+folderPath = "/Users/CrispyBacon/Desktop/Disscord Clients"
 IP = socket.gethostbyname(socket.gethostname())
-PORT = 6969
+PORT = 6970
 ADDR = (IP, PORT)
 DISCONNECT_MSG = "!DISCONNECT"
 
+
+def create_Header(messageType,body):
+    """Given the type of message and the body, this method will return a header for the message
+    and return the message with the header attactched"""
+
+    # Attatching the header 
+    out = messageType
+
+    # Determining the size of the message
+    arr = list(body)
+    size = str(len(arr))
+
+    # Padding if the size of the message is less than 1000 characters
+    while(len(size)<4):
+        size = "0"+size
+    #Attatching the body
+    out = out+size+body
+    return out
 
 
 def unique_Username(name, clients):
@@ -46,8 +66,9 @@ def delete_Client(fileName):
 def initialize_Clients():
     """Creates an array of clients to be manipulated in the server"""
     clients=[]
-    folderPath = "/Users/CrispyBacon/Desktop/Disscord Clients/"
+    global folderPath
     for file in os.listdir(folderPath):
+        print(file)
         with open(os.path.join(folderPath,file), "r") as f:
             details = f.readlines()
             client = Client(details[0],details[1],details[2])
@@ -60,7 +81,8 @@ def save_Client(client):
     """Saves the clients details into a text file on the server"""
     try:
         # File path to save details of the client
-        file_name = "/Users/CrispyBacon/Desktop/Disscord Clients/"+client.getName()+".txt"
+        file_name = "/Users/CrispyBacon/Desktop/Disscord Clients"+client.getName()+".txt"
+        print(file_name)
         file = open(file_name,"w")
 
         # Writing data to client's file
@@ -73,25 +95,96 @@ def save_Client(client):
         print("The Client could not be saved")
 
 
-def sign_in():
-    username = input("USERNAME: ")
-    '''
-    if (unique_Username(name, clientsList)
-        if password = input("PASSWORD: ")
-    '''
+def sign_in(connectionSocket,addr):
+    """This method handles the process of signing in a client to the server"""
+    message = "Please enter your Username:\n"
+    message =create_Header("M",message)
+    connectionSocket.send(message.encode())
 
+    # gets the username
+    username = connectionSocket.recv(1024).decode()
 
-def sign_up(clientsList):
-    username = input("USERNAME: ")
+    userFound = False
     
-    # look up username in the user file
-    while (unique_Username(name, clientsList)):   # if username taken
-        username = input("DUPLICATE. ENTER ANOTHER USERNAME: ")
+    for client in clientsList:
+        if client.getName == username:
+            message = "PASSWORD: "
+            message =create_Header("M",message)
+            connectionSocket.send(message.encode())
+            password = connectionSocket.recv(1024).decode()
+
+            if client.getPassword == password:
+                return True
+            
+            userFound = True
+            break
         
-    password = input("PASSWORD: ")
-    aClient = ClientClas(username, password, "ONLINE")    # create new instance of client
+    if userFound == False:
+        message = "Account not found. Create Datcord account :D\n"
+        connectionSocket.send(message.encode())
+        return False
+    
+'''
+Add this in handle_client
+
+    if option == "1":
+        if (sign_in(connectionSocket)) ## if it is an existing account, it returns True
+        ## proceed to menu
+
+    else:
+            # it is not an existing account, do something
+
+'''
+
+
+def sign_up(connectionSocket,addr):
+    """This method handles the process of signing up a new account to the server"""
+    global clientsList
+    #Generating username prompt
+    message = "Please enter your Username:\n"
+    message = create_Header("M",message)
+    connectionSocket.send(message.encode())
+
+    username = connectionSocket.recv(1024).decode()
+
+
+    # Look up username in the clients list to ensure that the username is unique
+    while (unique_Username(username, clientsList)):   # if username taken
+        username = input()
+        message = "DUPLICATE. ENTER ANOTHER USERNAME: \n"
+        message = create_Header("M",message)
+        connectionSocket.send(message.encode())
+        username = connectionSocket.recv(1024).decode()
+    
+
+    # Determining password for client
+    message = "Please enter your Password:\n"
+    message = create_Header("M",message)
+    connectionSocket.send(message.encode())
+
+    password = connectionSocket.recv(1024).decode()
+
+    # Error handling for if client tries to not have password
+    while(password == ""):
+        message = "You can not have an empty password\nPlease enter your Password:\n"
+        message = create_Header("M",message)
+        connectionSocket.send(message.encode())
+
+        password = connectionSocket.recv(1024).decode()
+
+
+    aClient = Client(username, password, "ONLINE")    # create new instance of client
+    # Generates text file of client
     save_Client(aClient)
+    # Modifies the client's details so other clients can talk to clients 
+    aClient.setIP(addr[0])
+    aClient.setPort(addr[1])
     clientsList.append(aClient)
+
+    # Letting client know that they have been sucessfully registered
+    message = "You have been sucessfully registered, please enjoy Datcord\n\n"
+    message = create_Header("I",message)
+    connectionSocket.send(message.encode())
 
 def letter_Counter_Validation(size,body):
     """Given the body of the message and the supposed number of characters in the message,
@@ -102,24 +195,6 @@ def letter_Counter_Validation(size,body):
         return True
     else:
         return False
-    
-def create_Header(messageType,body):
-    """Given the type of message and the body, this method will return a header for the message
-    and return the message with the header attactched"""
-
-    # Attatching the header 
-    out = messageType
-
-    # Determining the size of the message
-    arr = list(body)
-    size = str(len(arr))
-
-    # Padding if the size of the message is less than 1000 characters
-    while(len(size)<4):
-        size = "0"+size
-    #Attatching the body
-    out = out+size+body
-    return out
     
 def send_Reply(correct, counter, connectionSocket):
     """This method sends either a confirmation message that the full message was delivered,
@@ -215,14 +290,14 @@ def main_Menu(connectionSocket):
 def handle_client(connectionSocket, addr):
     """Code that each thread does"""
     print(f"[NEW CONNECTION] {addr} connected.")
-
+    global clientsList
     message = "Welcome to Datcord!\n1. Sign In\n2. Sign up"
     message = create_Header("M",message)
     connectionSocket.send(message.encode())
 
     # Getting option from client
     optionM = connectionSocket.recv(1024).decode()
-    option = str(optionM)
+    option = str(optionM)  
 
     # Making sure user actually enters one of the perscribed options
     while option not in '12':
@@ -234,10 +309,10 @@ def handle_client(connectionSocket, addr):
         option = str(optionM)
     
     if option == "1":
-        sign_in()
+        sign_in(connectionSocket,addr)
     
     else:
-        sign_up()
+        sign_up(connectionSocket,addr)
 
 
     # Display menu on client-side
