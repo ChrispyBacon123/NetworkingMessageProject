@@ -1,5 +1,6 @@
 import os
 from socket import *
+import time
 
 # Text file manipulation and client registering methods
 def unique_Username(name, clients):
@@ -57,6 +58,12 @@ def save_Client(client):
     except IOError:
         print("The Client could not be saved")
 
+
+
+
+
+
+
 # Need to fix
 def main_Menu(option,connectionSocket):
     """This method handles the main menu and all of it's cases.
@@ -106,6 +113,9 @@ def main_Menu(option,connectionSocket):
         return False
 
 
+
+
+# Message Header methods 
 def letter_Counter_Validation(size,body):
     """Given the body of the message and the supposed number of characters in the message,
     This method checks if the two correspond
@@ -134,6 +144,40 @@ def create_Header(messageType,body):
     out = out+size+body
     return out
     
+def send_Reply(correct, counter, connectionSocket):
+    """This method sends either a confirmation message that the full message was delivered,
+      or it sends a resend message based on the boolean parameter
+      This method also ensures that if the resend request has been sent 3 times,
+      then a message faliure option will be printed"""
+    
+    # If the message recieved was correct and decoded
+    if correct:
+        output = "A0000"
+        connectionSocket.send(output.encode())
+    
+    # Recursive case to send requests to resend the message 
+    elif not correct and counter<3:
+        output = "R0000"
+        connectionSocket.send(output.encode())
+        counter+=1
+
+        # Give the server time to resend the message
+        time.sleep(6)
+        message = connectionSocket.recv(1024)
+        decodedMessage = message.decode()
+        size = decodedMessage[1:5]
+        body = decodedMessage[:5]
+        correct = letter_Counter_Validation(int(size),body)
+
+        send_Reply(correct,counter,connectionSocket)
+
+    # Base case
+    else:
+        print("The message failed to deliver and the sender is being stingy with its resends :(")
+        connectionSocket.close()
+        return ""
+ 
+
 
     
 
