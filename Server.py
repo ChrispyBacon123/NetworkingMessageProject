@@ -8,7 +8,7 @@ from ClientClass import *
 clientsList =[]
 folderPath = "/Users/CrispyBacon/Desktop/Disscord Clients"
 IP = socket.gethostbyname(socket.gethostname())
-PORT = 6970
+PORT = 6984
 ADDR = (IP, PORT)
 DISCONNECT_MSG = "!DISCONNECT"
 
@@ -65,28 +65,28 @@ def delete_Client(fileName):
 
 def initialize_Clients():
     """Creates an array of clients to be manipulated in the server"""
-    clients=[]
+    clients = []
     global folderPath
     for file in os.listdir(folderPath):
-        print(file)
-        with open(os.path.join(folderPath,file), "r") as f:
-            details = f.readlines()
-            client = Client(details[0],details[1],details[2])
-            clients.append(client)
-    return clients         
+        if file.endswith(".txt"):
+            with open(os.path.join(folderPath,file), "r") as f:
+                data = f.readlines()
+                client = Client(data[0].strip(),data[1].strip(),data[2].strip())
+                clients.append(client)
+    return clients
 
 
 def save_Client(client):
-
     """Saves the clients details into a text file on the server"""
+    global folderPath
     try:
         # File path to save details of the client
-        file_name = "/Users/CrispyBacon/Desktop/Disscord Clients"+client.getName()+".txt"
+        file_name = folderPath+client.getName()+".txt"
         print(file_name)
         file = open(file_name,"w")
 
         # Writing data to client's file
-        print(client.getUsername(),file=file)
+        print(client.getName(),file=file)
         print(client.getPassword(),file=file)
         print(client.getStatus(),file=file)
         file.close()
@@ -97,6 +97,7 @@ def save_Client(client):
 
 def sign_in(connectionSocket,addr):
     """This method handles the process of signing in a client to the server"""
+    global clientsList
     message = "Please enter your Username:\n"
     message =create_Header("M",message)
     connectionSocket.send(message.encode())
@@ -104,25 +105,33 @@ def sign_in(connectionSocket,addr):
     # gets the username
     username = connectionSocket.recv(1024).decode()
 
-    userFound = False
-    
+    correctPassword = False
+    counter = 0
+    # Ensures that the username exists
     for client in clientsList:
         if client.getName == username:
-            message = "PASSWORD: "
-            message =create_Header("M",message)
-            connectionSocket.send(message.encode())
-            password = connectionSocket.recv(1024).decode()
-
-            if client.getPassword == password:
-                return True
-            
-            userFound = True
             break
-        
-    if userFound == False:
-        message = "Account not found. Create Datcord account :D\n"
+        counter+=1
+    
+    # Ensures client enteres the correct password
+    while not correctPassword:
+        message = f"Please enter your Password {username}:\n "
+        message =create_Header("M",message)
         connectionSocket.send(message.encode())
-        return False
+        password = connectionSocket.recv(1024).decode()
+
+        # Base case and setting the IP and port adresses so clients can connect to eachother
+        if client.getPassword == password:
+            clientsList[counter].setIP(addr[0])
+            clientsList[counter].setPort(addr[1])
+            return -1
+    
+    # Recursive case to ensure that the client enters a username that results in a username that is registered
+    message = "Account not found\n"
+    message = create_Header("M",message)
+    connectionSocket.send(message.encode())
+    return sign_in(connectionSocket,addr)
+
     
 '''
 Add this in handle_client
@@ -141,7 +150,7 @@ def sign_up(connectionSocket,addr):
     """This method handles the process of signing up a new account to the server"""
     global clientsList
     #Generating username prompt
-    message = "Please enter your Username:\n"
+    message = "Please enter your Username:"
     message = create_Header("M",message)
     connectionSocket.send(message.encode())
 
@@ -151,14 +160,14 @@ def sign_up(connectionSocket,addr):
     # Look up username in the clients list to ensure that the username is unique
     while (unique_Username(username, clientsList)):   # if username taken
         username = input()
-        message = "DUPLICATE. ENTER ANOTHER USERNAME: \n"
+        message = "DUPLICATE. ENTER ANOTHER USERNAME:"
         message = create_Header("M",message)
         connectionSocket.send(message.encode())
         username = connectionSocket.recv(1024).decode()
     
 
     # Determining password for client
-    message = "Please enter your Password:\n"
+    message = "Please enter your Password:"
     message = create_Header("M",message)
     connectionSocket.send(message.encode())
 
@@ -166,7 +175,7 @@ def sign_up(connectionSocket,addr):
 
     # Error handling for if client tries to not have password
     while(password == ""):
-        message = "You can not have an empty password\nPlease enter your Password:\n"
+        message = "You can not have an empty password\nPlease enter your Password:"
         message = create_Header("M",message)
         connectionSocket.send(message.encode())
 
