@@ -29,7 +29,8 @@ def create_chat(name, status, IP, port):
     chatSocket.connect(IP, port)
     msg = input('You: ') # The message to send to the other client
     while msg != 'DISCONNECT':
-        chatSocket.sendto(msg.encode(), (IP, port))
+        msg_with_header = create_Header('C', msg)
+        chatSocket.sendto(msg_with_header.encode(), (IP, port))
         modifiedMessage, serverAddress = clientSocket.recvfrom(2048)
 
 
@@ -53,7 +54,7 @@ clientSocket.connect((serverName,serverPort))
 flag = False # Flag used to exit the loop
 
 # Header Key:
-# M = Menu
+# M = Menu (Any message that requires an input from the client)
 # I = Information
 # S = Start chat
 # X = Exit current process
@@ -74,7 +75,7 @@ while flag != True:
     # Handling the message based on the header
     if header[:1] == 'M': # The message is a Menu
         print (msg) # The menu/options given by the server
-        sentence = input("Choose an option:\n") # Choosing one of the options the server presents to the client
+        sentence = input() # Giving the server the required data
         clientSocket.send(sentence.encode())
         continue
     elif header[:1] == 'I': # Information
