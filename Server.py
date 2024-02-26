@@ -3,10 +3,11 @@ import threading
 import os
 import time 
 from ClientClass import *
-#import Client.py
+
 
 clientsList =[]
-folderPath = "/Users/CrispyBacon/Desktop/Disscord Clients/"
+#folderPath = "/Users/CrispyBacon/Desktop/Disscord Clients/"
+folderPath = r"C:\Users\rlaal\Desktop\Clients"
 IP = socket.gethostbyname(socket.gethostname())
 PORT = 6971
 ADDR = (IP, PORT)
@@ -57,7 +58,7 @@ def get_Client_Index(name):
 def delete_Client(fileName):
     """Deletes the file of the client"""
     fileName = fileName+".txt"
-    folderPath = "/Users/CrispyBacon/Desktop/Disscord Clients/"
+    #folderPath = "/Users/CrispyBacon/Desktop/Disscord Clients/"
     try:
         # Iterate through all files in the folder
         for file in os.listdir(folderPath):
@@ -154,18 +155,6 @@ def sign_in(connectionSocket,addr):
                 clientsList[counter].setIP(addr[0])
                 clientsList[counter].setPort(addr[1])
                 return -1
-    
-'''
-Add this in handle_client
-
-    if option == "1":
-        if (sign_in(connectionSocket)) ## if it is an existing account, it returns True
-        ## proceed to menu
-
-    else:
-            # it is not an existing account, do something
-
-'''
 
 
 def sign_up(connectionSocket,addr):
@@ -227,6 +216,7 @@ def letter_Counter_Validation(size,body):
         return True
     else:
         return False
+
     
 def send_Reply(correct, counter, connectionSocket):
     """This method sends either a confirmation message that the full message was delivered,
@@ -269,25 +259,26 @@ def main_Menu(connectionSocket):
        It returns true if the method needs to be called again"""
     
     #Creating Header for the string
-
     # Creating the main menu String
     #menu = menu +"\t\tMain menu:\n"
     menu = "\t\tMain menu\n=======================================\n"
-    menu = menu +"1. Start a chat "
-    menu = menu +"2. Settings "
+    menu = menu +"1. Start a chat\n"
+    menu = menu +"2. Settings\n"
     menu = menu +"3. Log Out"
 
-    ## send this menu to client-side ##
-    print(menu)     # display the menu
-    #connectionSocket.sendto(menu.encode(), 
+    output = create_Header("M",menu)
+    connectionSocket.send(output.encode())
 
-    option = input()    ## user chooses an option
+    optionM = connectionSocket.recv(1024).decode()
+    option = str(optionM) 
     
+    '''
     # Option to send first time
     if option == "":    # if nothing selected, display menu again
-        connectionSocket.send(menu.encode())
+        output = create_Header("M",output)
+        connectionSocket.send(output.encode())
         return True
-
+    '''
     if option not in "123":
         output = "Please choose option 1, 2 or 3\n"+menu
         output = create_Header("M",output)
@@ -348,7 +339,7 @@ def handle_client(connectionSocket, addr):
 
 
     # Display menu on client-side
-    
+    main_Menu(connectionSocket)
     
     connectionSocket.close()
 
