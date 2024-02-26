@@ -3,13 +3,12 @@ import threading
 import os
 import time 
 from ClientClass import *
-
+#import Client.py
 
 clientsList =[]
-#folderPath = "/Users/CrispyBacon/Desktop/Disscord Clients/"
-folderPath = r"C:\Users\rlaal\Desktop\Clients"
+folderPath = "/Users/CrispyBacon/Desktop/Disscord Clients/"
 IP = socket.gethostbyname(socket.gethostname())
-PORT = 6971
+PORT = 6973
 ADDR = (IP, PORT)
 DISCONNECT_MSG = "!DISCONNECT"
 
@@ -32,7 +31,6 @@ def create_Header(messageType,body):
     out = out+size+body
     return out
 
-
 def unique_Username(name, clients):
     """Given the name, this method checks if the username is already taken by some else
         If the name is taken, the method will return true, otherwise it will return false"""
@@ -54,11 +52,10 @@ def get_Client_Index(name):
             return counter
         counter+=1
 
-
-def delete_Client(fileName):
+def update_Client(fileName):
     """Deletes the file of the client"""
     fileName = fileName+".txt"
-    #folderPath = "/Users/CrispyBacon/Desktop/Disscord Clients/"
+    folderPath = "/Users/CrispyBacon/Desktop/Disscord Clients/"
     try:
         # Iterate through all files in the folder
         for file in os.listdir(folderPath):
@@ -71,7 +68,6 @@ def delete_Client(fileName):
     except Exception as e:
         print("Can not delete the file",filePath)
 
-
 def initialize_Clients():
     """Creates an array of clients to be manipulated in the server
     It does this by scanning all the textfiles in the folder, extracting the data
@@ -83,13 +79,12 @@ def initialize_Clients():
             with open(os.path.join(folderPath,file), "r") as f:
                 data = f.readlines()
                 # There is no guarantee that the client is online at this moment
-                if data[2].strip() == "Online":
-                    data[2] = "Offline"
+                if data[2].strip() == "ONLINE":
+                    data[2] = "OFFLINE"
                 client = Client(data[0].strip(),data[1].strip(),data[2].strip())
                 clients.append(client)
 
     return clients
-
 
 def save_Client(client):
     """Saves the clients details into a text file stored on the server machine"""
@@ -110,6 +105,35 @@ def save_Client(client):
     except IOError:
         print("The Client could not be saved")
 
+# Functions to be used Signing in Menus
+def first_Option(connectionSocket,addr):
+    global clientsList
+    message = "\tWelcome to Datcord!\n=======================================\n1. Sign In\n2. Sign up"
+    message = create_Header("M",message)
+    connectionSocket.send(message.encode())
+
+    # Getting option from client
+    optionM = connectionSocket.recv(1024).decode()
+    option = str(optionM)  
+
+    # Making sure user actually enters one of the perscribed options
+    while option not in '12':
+        message = "Please select an option by entering the corresponding number\nWelcome to Datcord!\n1. Sign In\n2. Sign up"
+        message =create_Header("M",message)
+        connectionSocket.send(message.encode())
+
+        optionM = connectionSocket.recv(1024).decode()
+        option = str(optionM)
+    
+    if option == "1":
+        clientIndex = sign_in(connectionSocket,addr)
+        print(clientIndex, "Line 130")
+        return clientIndex
+    
+    else:
+        clientIndex = sign_up(connectionSocket,addr)
+        print(clientIndex, "Line 135")
+        return clientIndex
 
 def sign_in(connectionSocket,addr):
     """This method handles the process of signing in a client to the server"""
@@ -124,12 +148,25 @@ def sign_in(connectionSocket,addr):
     correctPassword = False
     counter = 0
 
+    # If Client wants to go back 
+    if "BACK" == username:
+        clientIndex = first_Option(connectionSocket,addr)
+        print(clientIndex, "Line 154")
+        return clientIndex
+
     # Ensures that the username exists in the server's list of clients
     while (not unique_Username(username, clientsList)):   # if username does not exist
         message = "That doesn't exist..\nPlease enter another username:"
         message = create_Header("M",message)
         connectionSocket.send(message.encode())
         username = connectionSocket.recv(1024).decode()
+
+        # If Client wants to go back 
+        print(username)
+        if "BACK" == username:
+            clientIndex = first_Option(connectionSocket,addr)
+            print(clientIndex, "Line 168")
+            return clientIndex
     
     # Requesting password from Client
     message = f"Please enter your Password {username}:"
@@ -137,15 +174,26 @@ def sign_in(connectionSocket,addr):
     connectionSocket.send(message.encode())
     password = connectionSocket.recv(1024).decode()
 
+    # If Client wants to go back 
+    if "BACK" == password:
+        clientIndex = first_Option(connectionSocket,addr)
+        print(clientIndex, "Line 180")
+        return clientIndex
+
     if clientsList[get_Client_Index(username)].getPassword() == password:
             clientsList[counter].setIP(addr[0])
             clientsList[counter].setPort(addr[1])
-            return -1
+
+            if clientsList[counter].getStatus == "OFFLINE":
+                clientsList[counter].setStatus("ONLINE")
+            counter = get_Client_Index(username)
+            print(counter, "Line 189")    
+            return counter
     else:
     
         # Ensures client enteres the correct password
         while not correctPassword:
-            message = f"Password was incorrect\nPlease enter your Password {username}:"
+            message = f"Password was incorrect\nPlease enter your Password or \"BACK\" to go back to the first menu:"
             message =create_Header("M",message)
             connectionSocket.send(message.encode())
             password = connectionSocket.recv(1024).decode()
@@ -154,8 +202,15 @@ def sign_in(connectionSocket,addr):
             if clientsList[get_Client_Index(username)].getPassword() == password:
                 clientsList[counter].setIP(addr[0])
                 clientsList[counter].setPort(addr[1])
-                return -1
-
+                print(counter, "Line 204")
+                counter = get_Client_Index(username)
+                return counter
+            
+            # If Client wants to go back 
+            if "BACK" == password:
+                clientIndex = first_Option(connectionSocket,addr)
+                print(clientIndex, "Line 210")
+                return clientIndex
 
 def sign_up(connectionSocket,addr):
     """This method handles the process of signing up a new account to the server"""
@@ -168,6 +223,12 @@ def sign_up(connectionSocket,addr):
     # Getting username from client
     username = connectionSocket.recv(1024).decode()
 
+    # If Client wants to go back 
+    if "BACK" == username:
+        clientIndex = first_Option(connectionSocket,addr)
+        print(clientIndex, "Line 227")
+        return clientIndex
+
 
     # Look up username in the clients list to ensure that the username is unique
     while (unique_Username(username, clientsList)):   # if username taken
@@ -175,22 +236,37 @@ def sign_up(connectionSocket,addr):
         message = create_Header("M",message)
         connectionSocket.send(message.encode())
         username = connectionSocket.recv(1024).decode()
+        # If Client wants to go back 
+        if "BACK" == username:
+            clientIndex = first_Option(connectionSocket,addr)
+            print(clientIndex, "Line 240")
+            return clientIndex
     
 
     # Determining password for client
-    message = "Please enter your Password:"
+    message = "Please make your Password:"
     message = create_Header("M",message)
     connectionSocket.send(message.encode())
 
     password = connectionSocket.recv(1024).decode()
+
+    # Allowing user to go back to first menu
+    if password=="BACK":
+        clientIndex = first_Option(connectionSocket,addr)
+        print(clientIndex, "Line 254")
+        return clientIndex
 
     # Error handling for if client tries to not have password
     while(password == ""):
         message = "You can not have an empty password\nPlease enter your Password:"
         message = create_Header("M",message)
         connectionSocket.send(message.encode())
-
         password = connectionSocket.recv(1024).decode()
+        # Allowing user to go back to first menu
+        if password =="BACK":
+            clientIndex = first_Option(connectionSocket,addr)
+            print(clientIndex, "Line 266")
+            return clientIndex
 
 
     aClient = Client(username, password, "ONLINE")    # create new instance of client
@@ -205,7 +281,97 @@ def sign_up(connectionSocket,addr):
     message = "You have been sucessfully registered, please enjoy Datcord\n\n"
     message = create_Header("I",message)
     connectionSocket.send(message.encode())
-   
+
+
+# Functions to be used with Main Menu
+def settings(connectionSocket,clientIndex):
+    global clientsList
+
+    # Sending the settings menu to the client
+    menu = menu = "\tSettings\n=======================================\n"
+    menu = menu +"1. Change Password\n"
+    menu = menu +"2. Change Status\n"
+    menu = menu +"3. Go back to Main menu\n"
+
+    message =create_Header("M",menu)
+    connectionSocket.send(message.encode())
+
+    # Getting option back from client
+    option = connectionSocket.recv(1024).decode()
+
+    # Ensuring that the client enters a correct option 
+    while option not in "123":
+        output = "Please choose option 1, 2 or 3\n"+menu
+        output = create_Header("M",output)
+        connectionSocket.send(output.encode())
+    
+    # If the client chooses to change their password
+    if option == "1":
+        message = "Please enter in your new password:"
+        message = create_Header("M",message)
+        connectionSocket.send(message.encode())
+        password = connectionSocket.recv(1024).decode()
+
+        # Updating the client and saving their details 
+        clientsList[clientIndex].setPassword(password)
+        save_Client(clientsList[clientIndex])
+
+
+    # If the client chooses to change their status
+    elif option == "2":
+        menu = "Please choose and option\n1.[HIDDEN]\n2.[ONLINE]"
+        message =create_Header("M",menu)
+        connectionSocket.send(message.encode())
+
+        # Getting option back from client
+        option = connectionSocket.recv(1024).decode()
+        
+        # Ensuring that the option is one of the available option
+        while option not in "12":
+            output = "Please choose option 1 or 2\n"+menu
+            output = create_Header("M",output)
+            connectionSocket.send(output.encode())
+            option = connectionSocket.recv(1024).decode()
+
+        # If the client opted to keep their status hidden 
+        if option == "1":
+            clientsList[clientIndex].setStatus("HIDDEN")
+            save_Client(clientsList[clientIndex])
+        # Nothing will be changed if option 2 is chosen
+            main_Menu(connectionSocket,clientIndex)
+        else:
+            main_Menu(connectionSocket,clientIndex)
+
+    else:
+        main_Menu(connectionSocket,clientIndex)
+
+def start_chat(connectionSocket):
+    """Lists the available clients & client can choose a peer to start chat with
+    & it returns the address of the chosen client"""
+    
+    counter = 1
+    availClient = "Available:\n"
+    for item in clientsList:
+        availClient = availClient+str(counter)+" "+item.toString()+"\n" # list the available clients
+        counter+= 1
+    availClient = availClient + "Please enter the number of the person you want to chat!"
+    output = create_Header("M", availClient)
+    connectionSocket.send(output.encode())
+
+    chosenOption = connectionSocket.recv(1024).decode() # get the option chosen by the user
+    chosenOption = int(chosenOption)   
+    chosenClient = clientsList[chosenOption - 1]
+
+    message = "Starting a chat with " + chosenClient.getName() + " ..."
+    output = create_Header("M", message)
+    connectionSocket.send(output.encode())
+
+    peerIP = chosenClient.getIP()
+    peerPort = chosenClient.getPort()
+    destination = {peerIP, peerPort}    # this does not work atm since clientFile
+                                        # does not contain IP nor port of client
+
+    return destination  
 
 def letter_Counter_Validation(size,body):
     """Given the body of the message and the supposed number of characters in the message,
@@ -216,7 +382,6 @@ def letter_Counter_Validation(size,body):
         return True
     else:
         return False
-
     
 def send_Reply(correct, counter, connectionSocket):
     """This method sends either a confirmation message that the full message was delivered,
@@ -251,10 +416,7 @@ def send_Reply(correct, counter, connectionSocket):
         connectionSocket.close()
         return ""
 
-
-# Need to fix
-#def main_Menu(option,connectionSocket):
-def main_Menu(connectionSocket):
+def main_Menu(connectionSocket,clientIndex):
     """This method handles the main menu and all of its cases.
        It returns true if the method needs to be called again"""
     
@@ -272,34 +434,20 @@ def main_Menu(connectionSocket):
     optionM = connectionSocket.recv(1024).decode()
     option = str(optionM) 
     
-    '''
-    # Option to send first time
-    if option == "":    # if nothing selected, display menu again
-        output = create_Header("M",output)
-        connectionSocket.send(output.encode())
-        return True
-    '''
     if option not in "123":
-        output = "Please choose option 1, 2 or 3\n"+menu
+        output = "Please choose option 1, 2 or 3\n" + menu
         output = create_Header("M",output)
         connectionSocket.send(output.encode())
-        return True
+        #return True
     
     # Printing the list of all the clients
     if option == "1":
-        counter = 1
-        output = ""
-        for item in clientsList:
-            output = output+counter+" "+item.toString()+"\n"
-            counter+= 1
-        output = create_Header("M",output)
-        connectionSocket.send(output.encode())
-        return False
+        start_chat(connectionSocket) # this must return peer's address
+        #return False
     
     if option == "2":
-        output = "Setting:\n1.Change Password\n2.Change Status"
-
-        return False
+        settings(connectionSocket,clientIndex)
+        #return False
 
     # The user has decided to log off
     if option == "3":
@@ -307,40 +455,18 @@ def main_Menu(connectionSocket):
         output = create_Header("X",output)
         connectionSocket.send(output.encode())
         connectionSocket.close()
-        return False
-    
+        #return False
+ 
 
 def handle_client(connectionSocket, addr):
+    global clientsList
+    for client in clientsList:
+        print(client.toString())
     """Code that each thread does"""
     print(f"[NEW CONNECTION] {addr} connected.")
-    global clientsList
-    message = "Welcome to Datcord!\n1. Sign In\n2. Sign up"
-    message = create_Header("M",message)
-    connectionSocket.send(message.encode())
-
-    # Getting option from client
-    optionM = connectionSocket.recv(1024).decode()
-    option = str(optionM)  
-
-    # Making sure user actually enters one of the perscribed options
-    while option not in '12':
-        message = "Please select an option by entering the corresponding number\nWelcome to Datcord!\n1. Sign In\n2. Sign up"
-        message =create_Header("M",message)
-        connectionSocket.send(message.encode())
-
-        optionM = connectionSocket.recv(1024).decode()
-        option = str(optionM)
-    
-    if option == "1":
-        sign_in(connectionSocket,addr)
-    
-    else:
-        sign_up(connectionSocket,addr)
-
-
-    # Display menu on client-side
-    main_Menu(connectionSocket)
-    
+    clientIndex = first_Option(connectionSocket,addr)
+    print(clientIndex,"\n\n\n\n")
+    main_Menu(connectionSocket,clientIndex)
     connectionSocket.close()
 
 def main():
