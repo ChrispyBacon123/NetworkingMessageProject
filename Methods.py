@@ -178,6 +178,7 @@ def send_Reply(correct, counter, connectionSocket):
         return ""
  
  # Functions to be used Signing in Menus
+# Functions to be used Signing in Menus
 def first_Option(connectionSocket,addr):
     global clientsList
     message = "Welcome to Datcord!\n1. Sign In\n2. Sign up"
@@ -198,10 +199,12 @@ def first_Option(connectionSocket,addr):
         option = str(optionM)
     
     if option == "1":
-        sign_in(connectionSocket,addr)
+        clientIndex = sign_in(connectionSocket,addr)
+        return clientIndex
     
     else:
-        sign_up(connectionSocket,addr)
+        clientIndex = sign_up(connectionSocket,addr)
+        return clientIndex
 
 def sign_in(connectionSocket,addr):
     """This method handles the process of signing in a client to the server"""
@@ -218,8 +221,8 @@ def sign_in(connectionSocket,addr):
 
     # If Client wants to go back 
     if "BACK" == username:
-        first_Option(connectionSocket,addr)
-        return -1
+        clientIndex = first_Option(connectionSocket,addr)
+        return clientIndex
 
     # Ensures that the username exists in the server's list of clients
     while (not unique_Username(username, clientsList)):   # if username does not exist
@@ -231,8 +234,8 @@ def sign_in(connectionSocket,addr):
         # If Client wants to go back 
         print(username)
         if "BACK" == username:
-            first_Option(connectionSocket,addr)
-            return -1
+            clientIndex = first_Option(connectionSocket,addr)
+            return clientIndex
     
     # Requesting password from Client
     message = f"Please enter your Password {username}:"
@@ -242,13 +245,16 @@ def sign_in(connectionSocket,addr):
 
     # If Client wants to go back 
     if "BACK" == password:
-        first_Option(connectionSocket,addr)
-        return -1
+        clientIndex = first_Option(connectionSocket,addr)
+        return clientIndex
 
     if clientsList[get_Client_Index(username)].getPassword() == password:
             clientsList[counter].setIP(addr[0])
             clientsList[counter].setPort(addr[1])
-            return -1
+
+            if clientsList[counter].getStatus == "OFFLINE":
+                clientsList[counter].setStatus("ONLINE")
+            return counter
     else:
     
         # Ensures client enteres the correct password
@@ -262,12 +268,12 @@ def sign_in(connectionSocket,addr):
             if clientsList[get_Client_Index(username)].getPassword() == password:
                 clientsList[counter].setIP(addr[0])
                 clientsList[counter].setPort(addr[1])
-                return -1
+                return counter
             
             # If Client wants to go back 
             if "BACK" == password:
-                first_Option(connectionSocket,addr)
-                return -1
+                clientIndex = first_Option(connectionSocket,addr)
+                return clientIndex
 
 def sign_up(connectionSocket,addr):
     """This method handles the process of signing up a new account to the server"""
@@ -282,8 +288,8 @@ def sign_up(connectionSocket,addr):
 
     # If Client wants to go back 
     if "BACK" == username:
-        first_Option(connectionSocket,addr)
-        return -1
+        clientIndex = first_Option(connectionSocket,addr)
+        return clientIndex
 
 
     # Look up username in the clients list to ensure that the username is unique
@@ -294,8 +300,8 @@ def sign_up(connectionSocket,addr):
         username = connectionSocket.recv(1024).decode()
         # If Client wants to go back 
         if "BACK" == username:
-            first_Option(connectionSocket,addr)
-            return -1
+            clientIndex = first_Option(connectionSocket,addr)
+            return clientIndex
     
 
     # Determining password for client
@@ -307,8 +313,8 @@ def sign_up(connectionSocket,addr):
 
     # Allowing user to go back to first menu
     if password=="BACK":
-        first_Option(connectionSocket,addr)
-        return-1
+        clientIndex = first_Option(connectionSocket,addr)
+        return clientIndex
 
     # Error handling for if client tries to not have password
     while(password == ""):
@@ -318,8 +324,8 @@ def sign_up(connectionSocket,addr):
         password = connectionSocket.recv(1024).decode()
         # Allowing user to go back to first menu
         if password =="BACK":
-            first_Option(connectionSocket,addr)
-            return-1
+            clientIndex = first_Option(connectionSocket,addr)
+            return clientIndex
 
 
     aClient = Client(username, password, "ONLINE")    # create new instance of client
@@ -335,6 +341,23 @@ def sign_up(connectionSocket,addr):
     message = create_Header("I",message)
     connectionSocket.send(message.encode())
 
+def initialize_Clients():
+    """Creates an array of clients to be manipulated in the server
+    It does this by scanning all the textfiles in the folder, extracting the data
+    and generating a list of clients"""
+    clients = []
+    global folderPath
+    for file in os.listdir(folderPath):
+        if file.endswith(".txt"):
+            with open(os.path.join(folderPath,file), "r") as f:
+                data = f.readlines()
+                # There is no guarantee that the client is online at this moment
+                if data[2].strip() == "Online":
+                    data[2] = "Offline"
+                client = Client(data[0].strip(),data[1].strip(),data[2].strip())
+                clients.append(client)
+
+    return clients
 
 
     
