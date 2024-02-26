@@ -177,6 +177,164 @@ def send_Reply(correct, counter, connectionSocket):
         connectionSocket.close()
         return ""
  
+ # Functions to be used Signing in Menus
+def first_Option(connectionSocket,addr):
+    global clientsList
+    message = "Welcome to Datcord!\n1. Sign In\n2. Sign up"
+    message = create_Header("M",message)
+    connectionSocket.send(message.encode())
+
+    # Getting option from client
+    optionM = connectionSocket.recv(1024).decode()
+    option = str(optionM)  
+
+    # Making sure user actually enters one of the perscribed options
+    while option not in '12':
+        message = "Please select an option by entering the corresponding number\nWelcome to Datcord!\n1. Sign In\n2. Sign up"
+        message =create_Header("M",message)
+        connectionSocket.send(message.encode())
+
+        optionM = connectionSocket.recv(1024).decode()
+        option = str(optionM)
+    
+    if option == "1":
+        sign_in(connectionSocket,addr)
+    
+    else:
+        sign_up(connectionSocket,addr)
+
+def sign_in(connectionSocket,addr):
+    """This method handles the process of signing in a client to the server"""
+    global clientsList
+    message = "Please enter your Username:"
+    message =create_Header("M",message)
+    connectionSocket.send(message.encode())
+
+    # gets the username
+    username = connectionSocket.recv(1024).decode()
+
+    correctPassword = False
+    counter = 0
+
+    # If Client wants to go back 
+    if "BACK" == username:
+        first_Option(connectionSocket,addr)
+        return -1
+
+    # Ensures that the username exists in the server's list of clients
+    while (not unique_Username(username, clientsList)):   # if username does not exist
+        message = "That doesn't exist..\nPlease enter another username:"
+        message = create_Header("M",message)
+        connectionSocket.send(message.encode())
+        username = connectionSocket.recv(1024).decode()
+
+        # If Client wants to go back 
+        print(username)
+        if "BACK" == username:
+            first_Option(connectionSocket,addr)
+            return -1
+    
+    # Requesting password from Client
+    message = f"Please enter your Password {username}:"
+    message =create_Header("M",message)
+    connectionSocket.send(message.encode())
+    password = connectionSocket.recv(1024).decode()
+
+    # If Client wants to go back 
+    if "BACK" == password:
+        first_Option(connectionSocket,addr)
+        return -1
+
+    if clientsList[get_Client_Index(username)].getPassword() == password:
+            clientsList[counter].setIP(addr[0])
+            clientsList[counter].setPort(addr[1])
+            return -1
+    else:
+    
+        # Ensures client enteres the correct password
+        while not correctPassword:
+            message = f"Password was incorrect\nPlease enter your Password or \"BACK\" to go back to the first menu:"
+            message =create_Header("M",message)
+            connectionSocket.send(message.encode())
+            password = connectionSocket.recv(1024).decode()
+
+            #  If the client enters the correct password
+            if clientsList[get_Client_Index(username)].getPassword() == password:
+                clientsList[counter].setIP(addr[0])
+                clientsList[counter].setPort(addr[1])
+                return -1
+            
+            # If Client wants to go back 
+            if "BACK" == password:
+                first_Option(connectionSocket,addr)
+                return -1
+
+def sign_up(connectionSocket,addr):
+    """This method handles the process of signing up a new account to the server"""
+    global clientsList
+    #Generating username prompt
+    message = "Please enter your Username:"
+    message = create_Header("M",message)
+    connectionSocket.send(message.encode())
+
+    # Getting username from client
+    username = connectionSocket.recv(1024).decode()
+
+    # If Client wants to go back 
+    if "BACK" == username:
+        first_Option(connectionSocket,addr)
+        return -1
+
+
+    # Look up username in the clients list to ensure that the username is unique
+    while (unique_Username(username, clientsList)):   # if username taken
+        message = "That username is already taken.\nPlease enter another username:"
+        message = create_Header("M",message)
+        connectionSocket.send(message.encode())
+        username = connectionSocket.recv(1024).decode()
+        # If Client wants to go back 
+        if "BACK" == username:
+            first_Option(connectionSocket,addr)
+            return -1
+    
+
+    # Determining password for client
+    message = "Please enter your Password:"
+    message = create_Header("M",message)
+    connectionSocket.send(message.encode())
+
+    password = connectionSocket.recv(1024).decode()
+
+    # Allowing user to go back to first menu
+    if password=="BACK":
+        first_Option(connectionSocket,addr)
+        return-1
+
+    # Error handling for if client tries to not have password
+    while(password == ""):
+        message = "You can not have an empty password\nPlease enter your Password:"
+        message = create_Header("M",message)
+        connectionSocket.send(message.encode())
+        password = connectionSocket.recv(1024).decode()
+        # Allowing user to go back to first menu
+        if password =="BACK":
+            first_Option(connectionSocket,addr)
+            return-1
+
+
+    aClient = Client(username, password, "ONLINE")    # create new instance of client
+    # Generates text file of client
+    save_Client(aClient)
+    # Modifies the client's details so other clients can talk to clients 
+    aClient.setIP(addr[0])
+    aClient.setPort(addr[1])
+    clientsList.append(aClient)
+
+    # Letting client know that they have been sucessfully registered
+    message = "You have been sucessfully registered, please enjoy Datcord\n\n"
+    message = create_Header("I",message)
+    connectionSocket.send(message.encode())
+
 
 
     
