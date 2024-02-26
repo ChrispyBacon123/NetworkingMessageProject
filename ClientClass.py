@@ -30,11 +30,11 @@ class Client:
         return self.__port
 
     #Mutator to change the IP address
-    def changeIP(self, newIP):
+    def setIP(self, newIP):
         self.__IP_add = newIP
 
     #Mutator to change the port of the client
-    def changeIP(self, newPort):
+    def setPort(self, newPort):
         self.__port = newPort
 
     #Mutator to change the password
