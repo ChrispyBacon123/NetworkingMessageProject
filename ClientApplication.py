@@ -18,8 +18,6 @@ def create_Header(messageType,body):
     out = out+size+body
     return out
 
-#def request_retransmission(socket):
-    
 
 
 
@@ -31,25 +29,9 @@ def create_chat(name, status, IP, port):
     chatSocket.connect(IP, port)
     msg = input('You: ') # The message to send to the other client
     while msg != 'DISCONNECT':
-        msg_with_header = create_Header('C', msg) # Adding the header to the message
-        chatSocket.sendto(msg_with_header.encode(), (IP, port)) # sending the message with the header to the peer
-        response, serverAddress = clientSocket.recvfrom(2048) # saving the response from the peer to response, serverAddress is not used
-        header = response.decode()[:5] # saving just the header
-
-        if header[:1] == 'C': # The response is a chat message
-            modifiedMessage = response.decode()[5:] # taking off the header
-            print(name + ': ' + modifiedMessage) # Showing the response from the peer
-            msg = input('You: ') # Next message
-            continue
-        elif header[:1] == 'A': # This is not the response from the peer but just an acknowledgement 
-            continue
-        elif header[:1] == 'R': # This means the chat message was not sent or was corrupted and the peer has requested you to re-send it
-            chatSocket.sendto(msg_with_header.encode(), (IP, port)) # re-sending the message
-            continue
-
-
-    chatSocket.sendto(('Peer has left the chat').encode(), (IP, port))
-    chatSocket.close() # Terminate the connection to the peer
+        msg_with_header = create_Header('C', msg)
+        chatSocket.sendto(msg_with_header.encode(), (IP, port))
+        modifiedMessage, serverAddress = clientSocket.recvfrom(2048)
 
 
 
@@ -65,8 +47,8 @@ def create_chat(name, status, IP, port):
 #----------- Client to Server -----------#
 #Using TCP
 #serverName = socket.gethostbyname(socket.gethostname())
-serverName = '192.168.101.250'
-serverPort = 6970
+serverName = '127.0.0.1'
+serverPort = 6971
 clientSocket = socket(AF_INET, SOCK_STREAM)
 clientSocket.connect((serverName,serverPort))
 flag = False # Flag used to exit the loop
@@ -120,6 +102,6 @@ while flag != True:
         continue
     else:
         print('Invalid message') # In case the message does not have a valid header
-        print(header)
+        flag = True
     
 # Exits the loop when the user logs out of the server

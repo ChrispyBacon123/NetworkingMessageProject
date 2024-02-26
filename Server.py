@@ -6,9 +6,9 @@ from ClientClass import *
 #import Client.py
 
 clientsList =[]
-folderPath = "/Users/CrispyBacon/Desktop/Disscord Clients"
+folderPath = "/Users/CrispyBacon/Desktop/Disscord Clients/"
 IP = socket.gethostbyname(socket.gethostname())
-PORT = 6984
+PORT = 6971
 ADDR = (IP, PORT)
 DISCONNECT_MSG = "!DISCONNECT"
 
@@ -44,6 +44,14 @@ def unique_Username(name, clients):
             return flag
     return flag
 
+def get_Client_Index(name):
+    """Given a client name, this function will return the index of the client in the clientsList list"""
+    global clientsList
+    counter=0
+    for client in clientsList:
+        if client.getName()==name:
+            return counter
+        counter+=1
 
 
 def delete_Client(fileName):
@@ -64,25 +72,32 @@ def delete_Client(fileName):
 
 
 def initialize_Clients():
-    """Creates an array of clients to be manipulated in the server"""
+    """Creates an array of clients to be manipulated in the server
+    It does this by scanning all the textfiles in the folder, extracting the data
+    and generating a list of clients"""
     clients = []
     global folderPath
     for file in os.listdir(folderPath):
         if file.endswith(".txt"):
             with open(os.path.join(folderPath,file), "r") as f:
                 data = f.readlines()
+                # There is no guarantee that the client is online at this moment
+                if data[2].strip() == "Online":
+                    data[2] = "Offline"
                 client = Client(data[0].strip(),data[1].strip(),data[2].strip())
                 clients.append(client)
+
     return clients
 
 
 def save_Client(client):
-    """Saves the clients details into a text file on the server"""
+    """Saves the clients details into a text file stored on the server machine"""
     global folderPath
     try:
         # File path to save details of the client
         file_name = folderPath+client.getName()+".txt"
         print(file_name)
+        SystemExit()
         file = open(file_name,"w")
 
         # Writing data to client's file
@@ -98,7 +113,7 @@ def save_Client(client):
 def sign_in(connectionSocket,addr):
     """This method handles the process of signing in a client to the server"""
     global clientsList
-    message = "Please enter your Username:\n"
+    message = "Please enter your Username:"
     message =create_Header("M",message)
     connectionSocket.send(message.encode())
 
@@ -107,31 +122,38 @@ def sign_in(connectionSocket,addr):
 
     correctPassword = False
     counter = 0
-    # Ensures that the username exists
-    for client in clientsList:
-        if client.getName == username:
-            break
-        counter+=1
-    
-    # Ensures client enteres the correct password
-    while not correctPassword:
-        message = f"Please enter your Password {username}:\n "
-        message =create_Header("M",message)
-        connectionSocket.send(message.encode())
-        password = connectionSocket.recv(1024).decode()
 
-        # Base case and setting the IP and port adresses so clients can connect to eachother
-        if client.getPassword == password:
+    # Ensures that the username exists in the server's list of clients
+    while (not unique_Username(username, clientsList)):   # if username does not exist
+        message = "That doesn't exist..\nPlease enter another username:"
+        message = create_Header("M",message)
+        connectionSocket.send(message.encode())
+        username = connectionSocket.recv(1024).decode()
+    
+    # Requesting password from Client
+    message = f"Please enter your Password {username}:"
+    message =create_Header("M",message)
+    connectionSocket.send(message.encode())
+    password = connectionSocket.recv(1024).decode()
+
+    if clientsList[get_Client_Index(username)].getPassword() == password:
             clientsList[counter].setIP(addr[0])
             clientsList[counter].setPort(addr[1])
             return -1
+    else:
     
-    # Recursive case to ensure that the client enters a username that results in a username that is registered
-    message = "Account not found\n"
-    message = create_Header("M",message)
-    connectionSocket.send(message.encode())
-    return sign_in(connectionSocket,addr)
+        # Ensures client enteres the correct password
+        while not correctPassword:
+            message = f"Password was incorrect\nPlease enter your Password {username}:"
+            message =create_Header("M",message)
+            connectionSocket.send(message.encode())
+            password = connectionSocket.recv(1024).decode()
 
+            #  If the client enters the correct password
+            if clientsList[get_Client_Index(username)].getPassword() == password:
+                clientsList[counter].setIP(addr[0])
+                clientsList[counter].setPort(addr[1])
+                return -1
     
 '''
 Add this in handle_client
@@ -154,13 +176,13 @@ def sign_up(connectionSocket,addr):
     message = create_Header("M",message)
     connectionSocket.send(message.encode())
 
+    # Getting username from client
     username = connectionSocket.recv(1024).decode()
 
 
     # Look up username in the clients list to ensure that the username is unique
     while (unique_Username(username, clientsList)):   # if username taken
-        username = input()
-        message = "DUPLICATE. ENTER ANOTHER USERNAME:"
+        message = "That username is already taken.\nPlease enter another username:"
         message = create_Header("M",message)
         connectionSocket.send(message.encode())
         username = connectionSocket.recv(1024).decode()
@@ -194,6 +216,7 @@ def sign_up(connectionSocket,addr):
     message = "You have been sucessfully registered, please enjoy Datcord\n\n"
     message = create_Header("I",message)
     connectionSocket.send(message.encode())
+   
 
 def letter_Counter_Validation(size,body):
     """Given the body of the message and the supposed number of characters in the message,
@@ -346,7 +369,8 @@ def main():
         conn, addr = server.accept()
         thread = threading.Thread(target=handle_client, args=(conn, addr))
         thread.start()
-        print(f"[ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
+        threads = threading.active_count() - 1
+        print(f"A new client has joined, we now have {threads} threads\n")
 
         
         
