@@ -1,0 +1,2 @@
+NEED TO CHANGE:
+	- startChat() -> dont show your account in the list of available clients
