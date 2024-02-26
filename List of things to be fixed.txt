@@ -1,2 +1,3 @@
 NEED TO CHANGE:
 	- startChat() -> dont show your account in the list of available clients
+	- individual client code -> list instead of class?? maybe
