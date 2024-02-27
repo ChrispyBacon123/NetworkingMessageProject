@@ -1,3 +1,5 @@
 NEED TO CHANGE:
 	- startChat() -> dont show your account in the list of available clients
 	- individual client code -> list instead of class?? maybe
+	- for UDP between clients, they need a port to use for chatting; not the port that use to connect to server
+
