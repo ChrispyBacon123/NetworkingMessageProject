@@ -3,12 +3,14 @@ import threading
 import os
 import time 
 from ClientClass import *
-#import Client.py
 
+# List containing all the client details
 clientsList =[]
+# Lock to synchronize clientsList
+lock = threading.Lock()
 folderPath = "/Users/CrispyBacon/Desktop/Disscord Clients/"
 IP = socket.gethostbyname(socket.gethostname())
-PORT = 6973
+PORT = 6969
 ADDR = (IP, PORT)
 DISCONNECT_MSG = "!DISCONNECT"
 
@@ -50,7 +52,9 @@ def get_Client_Index(name):
     for client in clientsList:
         if client.getName()==name:
             return counter
-        counter+=1
+        counter +=1
+
+
 
 def update_Client(fileName):
     """Deletes the file of the client"""
@@ -107,7 +111,6 @@ def save_Client(client):
 
 # Functions to be used Signing in Menus
 def first_Option(connectionSocket,addr):
-    global clientsList
     message = "\tWelcome to Datcord!\n=======================================\n1. Sign In\n2. Sign up"
     message = create_Header("M",message)
     connectionSocket.send(message.encode())
@@ -127,12 +130,10 @@ def first_Option(connectionSocket,addr):
     
     if option == "1":
         clientIndex = sign_in(connectionSocket,addr)
-        print(clientIndex, "Line 130")
         return clientIndex
     
     else:
         clientIndex = sign_up(connectionSocket,addr)
-        print(clientIndex, "Line 135")
         return clientIndex
 
 def sign_in(connectionSocket,addr):
@@ -162,7 +163,6 @@ def sign_in(connectionSocket,addr):
         username = connectionSocket.recv(1024).decode()
 
         # If Client wants to go back 
-        print(username)
         if "BACK" == username:
             clientIndex = first_Option(connectionSocket,addr)
             print(clientIndex, "Line 168")
@@ -177,9 +177,8 @@ def sign_in(connectionSocket,addr):
     # If Client wants to go back 
     if "BACK" == password:
         clientIndex = first_Option(connectionSocket,addr)
-        print(clientIndex, "Line 180")
         return clientIndex
-
+    
     if clientsList[get_Client_Index(username)].getPassword() == password:
             clientsList[counter].setIP(addr[0])
             clientsList[counter].setPort(addr[1])
@@ -187,7 +186,6 @@ def sign_in(connectionSocket,addr):
             if clientsList[counter].getStatus == "OFFLINE":
                 clientsList[counter].setStatus("ONLINE")
             counter = get_Client_Index(username)
-            print(counter, "Line 189")    
             return counter
     else:
     
@@ -337,8 +335,10 @@ def settings(connectionSocket,clientIndex):
         if option == "1":
             clientsList[clientIndex].setStatus("HIDDEN")
             save_Client(clientsList[clientIndex])
-        # Nothing will be changed if option 2 is chosen
+        # If the client opted to show their status  
             main_Menu(connectionSocket,clientIndex)
+            clientsList[clientIndex].setStatus("ONLINE")
+            save_Client(clientsList[clientIndex])
         else:
             main_Menu(connectionSocket,clientIndex)
 
@@ -460,8 +460,6 @@ def main_Menu(connectionSocket,clientIndex):
 
 def handle_client(connectionSocket, addr):
     global clientsList
-    for client in clientsList:
-        print(client.toString())
     """Code that each thread does"""
     print(f"[NEW CONNECTION] {addr} connected.")
     clientIndex = first_Option(connectionSocket,addr)
