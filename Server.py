@@ -9,7 +9,10 @@ clientsList =[]
 # Lock to synchronize clientsList
 lock = threading.Lock()
 folderPath = "/Users/CrispyBacon/Desktop/Disscord Clients/"
-IP = socket.gethostbyname(socket.gethostname())
+ipSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+ipSocket.connect(("8.8.8.8", 80))
+ipAddress = ipSocket.getsockname()[0]
+IP = ipAddress
 PORT = 6969
 ADDR = (IP, PORT)
 DISCONNECT_MSG = "!DISCONNECT"
@@ -179,14 +182,48 @@ def sign_in(connectionSocket,addr):
         clientIndex = first_Option(connectionSocket,addr)
         return clientIndex
     
+    # If the client's password is correct
     if clientsList[get_Client_Index(username)].getPassword() == password:
-            clientsList[counter].setIP(addr[0])
-            clientsList[counter].setPort(addr[1])
+        correct = False
 
-            if clientsList[counter].getStatus == "OFFLINE":
-                clientsList[counter].setStatus("ONLINE")
-            counter = get_Client_Index(username)
-            return counter
+        # Get the UDPPort
+        while not correct:
+            message = f"Please enter a valid port that will be used to message other clients:"
+            message =create_Header("M",message)
+            connectionSocket.send(message.encode())
+            inputPort = connectionSocket.recv(1024).decode()
+
+            if inputPort.isdigit():
+                port = int(inputPort)
+
+            # If Client wants to go back 
+            if "BACK" == port:
+                clientIndex = first_Option(connectionSocket,addr)
+                return clientIndex
+                
+            if  isinstance(port,int):
+                if port>999 and port<65535 and isinstance(port,int):
+                    correct = True
+                else:
+                    message = f"That port number is not valid:"
+                    message =create_Header("I",message)
+                    connectionSocket.send(message.encode())
+            else:
+                message = f"Please enter and integer for the port NUMBER:\n"
+                message =create_Header("I",message)
+                connectionSocket.send(message.encode())
+
+
+            #  If all the data entered is correct
+            if clientsList[get_Client_Index(username)].getPassword() == password and correct:
+                clientsList[counter].setIP(addr[0])
+                clientsList[counter].setPort(addr[1])
+                clientsList[counter].setUDPPort(int(port))
+                if clientsList[counter].getStatus == "OFFLINE":
+                    clientsList[counter].setStatus("ONLINE")
+                counter = get_Client_Index(username)
+                return counter
+            
     else:
     
         # Ensures client enteres the correct password
@@ -196,20 +233,13 @@ def sign_in(connectionSocket,addr):
             connectionSocket.send(message.encode())
             password = connectionSocket.recv(1024).decode()
 
-            #  If the client enters the correct password
-            if clientsList[get_Client_Index(username)].getPassword() == password:
-                clientsList[counter].setIP(addr[0])
-                clientsList[counter].setPort(addr[1])
-                print(counter, "Line 204")
-                counter = get_Client_Index(username)
-                return counter
-            
             # If Client wants to go back 
             if "BACK" == password:
                 clientIndex = first_Option(connectionSocket,addr)
-                print(clientIndex, "Line 210")
                 return clientIndex
-
+        
+    
+            
 def sign_up(connectionSocket,addr):
     """This method handles the process of signing up a new account to the server"""
     global clientsList
@@ -265,6 +295,37 @@ def sign_up(connectionSocket,addr):
             clientIndex = first_Option(connectionSocket,addr)
             print(clientIndex, "Line 266")
             return clientIndex
+    # Get the UDPPort
+        
+    correct = False
+
+        # Get the UDPPort
+    while not correct:
+            message = f"Please enter a valid port that will be used to message other clients:"
+            message =create_Header("M",message)
+            connectionSocket.send(message.encode())
+            inputPort = connectionSocket.recv(1024).decode()
+
+            if inputPort.isdigit():
+                port = int(inputPort)
+
+            # If Client wants to go back 
+            if "BACK" == port:
+                clientIndex = first_Option(connectionSocket,addr)
+                return clientIndex
+                
+            if  isinstance(port,int):
+                if port>999 and port<65535 and isinstance(port,int):
+                    correct = True
+                else:
+                    message = f"That port number is not valid:"
+                    message =create_Header("I",message)
+                    connectionSocket.send(message.encode())
+            else:
+                message = f"Please enter and integer for the port NUMBER:\n"
+                message =create_Header("I",message)
+                connectionSocket.send(message.encode())
+
 
 
     aClient = Client(username, password, "ONLINE")    # create new instance of client
@@ -273,13 +334,13 @@ def sign_up(connectionSocket,addr):
     # Modifies the client's details so other clients can talk to clients 
     aClient.setIP(addr[0])
     aClient.setPort(addr[1])
+    aClient.setUDPPort(port)
     clientsList.append(aClient)
 
     # Letting client know that they have been sucessfully registered
     message = "You have been sucessfully registered, please enjoy Datcord\n\n"
     message = create_Header("I",message)
     connectionSocket.send(message.encode())
-
 
 # Functions to be used with Main Menu
 def settings(connectionSocket,clientIndex):
@@ -360,14 +421,32 @@ def start_chat(connectionSocket):
 
     chosenOption = connectionSocket.recv(1024).decode() # get the option chosen by the user
     chosenOption = int(chosenOption)   
+    # Error checking
+    while chosenOption<1 or chosenOption>counter:
+        availClient = availClient + "That option does not exist\nPlease enter the number of the person you want to chat!"
+        output = create_Header("M", availClient)
+        connectionSocket.send(output.encode())
+        chosenOption = connectionSocket.recv(1024).decode() # get the option chosen by the user
+        chosenOption = int(chosenOption)   
+
+    
     chosenClient = clientsList[chosenOption - 1]
+
+    # If the client is offline
+    if chosenClient.getStatus()=="OFFLINE":
+        message = message + "The client is offline so you can't chat with them"
+        output = create_Header("I", availClient)
+        connectionSocket.send(output.encode())
+        main_Menu()
+        
+        
 
     message = "Starting a chat with " + chosenClient.getName() + " ..."
     output = create_Header("M", message)
     connectionSocket.send(output.encode())
 
     peerIP = chosenClient.getIP()
-    peerPort = chosenClient.getPort()
+    peerPort = chosenClient.getUDPPort()
     destination = {peerIP, peerPort}    # this does not work atm since clientFile
                                         # does not contain IP nor port of client
 
