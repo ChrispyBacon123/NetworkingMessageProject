@@ -2,6 +2,7 @@ NEED TO CHANGE:
 	- startChat() -> dont show your account in the list of available clients
 	- individual client code -> list instead of class?? maybe
 	- for UDP between clients, they need a port to use for chatting; not the port that use to connect to server
+		WHAT IF: client, using findUDPPort(), sends the avail port # when sign in/up
 	- when new user signs up or an existing user changes password, new file is created in different directory
 	- let user know you can type "BACK" to leave sign in menu
 
