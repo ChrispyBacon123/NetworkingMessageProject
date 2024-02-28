@@ -587,6 +587,14 @@ def handle_client(connectionSocket, addr):
     main_Menu(connectionSocket,clientIndex)
     connectionSocket.close()
 
+
+def log_off(clientIndex):
+    """When the client logs off, their status changes to OFFLINE."""
+    clientsList[clientIndex].setStatus("OFFLINE")
+    save_Client(clientsList[clientIndex])   
+    print(clientsList[clientIndex].toString())
+
+
 def main():
     # Starting up server
     print("[STARTING] Server is starting...")
