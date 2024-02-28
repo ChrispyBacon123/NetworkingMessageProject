@@ -485,6 +485,7 @@ def start_chat(connectionSocket,clientIndex):
         connectionSocket.send(output.encode())
         
         # Maybe implement this (bring it back to main menu after chat ends)
+        # client needs send an empty string after ending a chat to come back to this point
         connectionSocket.recv(1024).decode()
         main_Menu(connectionSocket,clientIndex)
 
