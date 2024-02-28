@@ -227,7 +227,7 @@ def sign_in(connectionSocket,addr):
                 return clientIndex
                 
             if  isinstance(port,int):
-                if port>999 and port<65535 and isinstance(port,int):
+                if port>10000 and port<65535 and isinstance(port,int):
                     correct = True
                 else:
                     message = f"That port number is not valid:"
@@ -325,7 +325,7 @@ def sign_up(connectionSocket,addr):
                 return clientIndex
                 
             if  isinstance(port,int):
-                if port>999 and port<65535 and isinstance(port,int):
+                if port>10000 and port<65535 and isinstance(port,int):
                     correct = True
                 else:
                     message = f"That port number is not valid:"
