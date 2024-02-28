@@ -37,7 +37,7 @@ def create_chat(name, IP, port):
     while msg.upper() != 'DISCONNECT': # The upper() method is used to make the condition case insensitive
 
         msg_with_header = create_Header('C', msg) # Adding the header to the message
-        port = int(port)
+        port = int(port) # ensure port is int
         chatSocket.sendto(msg_with_header.encode(), (IP, port)) # sending the message with the header to the peer
 
         start_time = time.time()
@@ -79,7 +79,8 @@ def create_chat(name, IP, port):
         # This message must not be printed if the connection is being terminated because there were too many timeouts
         chatSocket.sendto(('Peer has left the chat').encode(), (IP, port))
     chatSocket.close() # Terminate the connection to the peer
-
+    
+# Add some way to get back to menu
 
 # Main function
 def main():
