@@ -8,8 +8,7 @@ from ClientClass import *
 # clientsList =[]
 # Lock to synchronize clientsList
 lock = threading.Lock()
-#FOLDER_PATH = "/Users/CrispyBacon/Desktop/Disscord Clients/"
-FOLDER_PATH = R"C:\Users\user-pc\OneDrive - University of Cape Town\2024\CSC3002F\Assignment 1\Disscord Clients"
+FOLDER_PATH = "/Users/CrispyBacon/Desktop/Disscord Clients/"
 ipSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 ipSocket.connect(("8.8.8.8", 80))
 ipAddress = ipSocket.getsockname()[0]
@@ -39,6 +38,7 @@ def create_Header(messageType,body):
     return out
 
 
+
 # Functions relating to the list of clients
 def unique_Username(name, clients):
     """Given the name, this method checks if the username is already taken by some else
@@ -52,7 +52,6 @@ def unique_Username(name, clients):
             return flag
     return flag
 
-
 def get_Client_Index(name):
     """Given a client name, this function will return the index of the client in the clientsList list"""
     clientsList
@@ -62,10 +61,10 @@ def get_Client_Index(name):
             return counter
         counter +=1
 
-
 def update_Client(fileName):
     """Deletes the file of the client"""
     fileName = fileName+".txt"
+    FOLDERPATH = "/Users/CrispyBacon/Desktop/Disscord Clients/"
     try:
         # Iterate through all files in the folder
         for file in os.listdir(FOLDERPATH):
@@ -76,8 +75,7 @@ def update_Client(fileName):
                 # Delete the file
                 os.remove(filePath)
     except Exception as e:
-        print("Cannot delete the file",filePath)
-
+        print("Can not delete the file",filePath)
 
 def initialize_Clients():
     """Creates an array of clients to be manipulated in the server
@@ -96,9 +94,9 @@ def initialize_Clients():
 
     return clients
 
-
 def save_Client(client):
     """Saves the clients details into a text file stored on the server machine"""
+    FOLDER_PATH
     try:
         # File path to save details of the client
         file_name = FOLDER_PATH+client.getName()+".txt"
@@ -115,7 +113,6 @@ def save_Client(client):
     except IOError:
         print("The Client could not be saved")
 
-
 def print_Clients():
     """This function returns a string list of the list of clients registred on the server"""
     global clientsList
@@ -126,7 +123,6 @@ def print_Clients():
         counter+= 1
     availClient = availClient + "Please enter the number of the person you want to chat!"
     return availClient
-
 
 # Functions to be used Signing in Menus
 def first_Option(connectionSocket,addr):
@@ -157,7 +153,6 @@ def first_Option(connectionSocket,addr):
         clientIndex = sign_up(connectionSocket,addr)
         return clientIndex
 
-
 def sign_in(connectionSocket,addr):
     """This method handles the process of signing in a client to the server"""
     clientsList
@@ -179,7 +174,7 @@ def sign_in(connectionSocket,addr):
 
     # Ensures that the username exists in the server's list of clients
     while (not unique_Username(username, clientsList)):   # if username does not exist
-        message = "That doesn't exist.. Enter BACK to sign up.\nOtherwise please enter another username:"
+        message = "That doesn't exist..\nPlease enter another username:"
         message = create_Header("M",message)
         connectionSocket.send(message.encode())
         username = connectionSocket.recv(1024).decode()
@@ -258,7 +253,6 @@ def sign_in(connectionSocket,addr):
                 for i in clientsList:
                     print(i.toString())
                 return counter
-
                       
 def sign_up(connectionSocket,addr):
     """This method handles the process of signing up a new account to the server"""
@@ -276,9 +270,10 @@ def sign_up(connectionSocket,addr):
         clientIndex = first_Option(connectionSocket,addr)
         return clientIndex
 
+
     # Look up username in the clients list to ensure that the username is unique
     while (unique_Username(username, clientsList)):   # if username taken
-        message = "That username is already taken. Enter BACK to cancel.\nOtherwise please enter another username:"
+        message = "That username is already taken.\nPlease enter another username:"
         message = create_Header("M",message)
         connectionSocket.send(message.encode())
         username = connectionSocket.recv(1024).decode()
@@ -287,6 +282,7 @@ def sign_up(connectionSocket,addr):
             clientIndex = first_Option(connectionSocket,addr)
             return clientIndex
     
+
     # Determining password for client
     message = "Please make your Password:"
     message = create_Header("M",message)
@@ -301,7 +297,7 @@ def sign_up(connectionSocket,addr):
 
     # Error handling for if client tries to not have password
     while(password == ""):
-        message = "You can not have an empty password. Enter BACK to cancel.\nOtherwise please enter your Password:"
+        message = "You can not have an empty password\nPlease enter your Password:"
         message = create_Header("M",message)
         connectionSocket.send(message.encode())
         password = connectionSocket.recv(1024).decode()
@@ -332,11 +328,11 @@ def sign_up(connectionSocket,addr):
                 if port>999 and port<65535 and isinstance(port,int):
                     correct = True
                 else:
-                    message = f"That port number is not valid. Enter BACK to cancel.\nOtherwise please enter a valid port number:\n"
+                    message = f"That port number is not valid:"
                     message =create_Header("I",message)
                     connectionSocket.send(message.encode())
             else:
-                message = f"Please enter an integer for the port NUMBER:\n"
+                message = f"Please enter and integer for the port NUMBER:\n"
                 message =create_Header("I",message)
                 connectionSocket.send(message.encode())
 
@@ -431,7 +427,6 @@ def settings(connectionSocket,clientIndex):
     else:
         main_Menu(connectionSocket,clientIndex)
 
-
 def start_chat(connectionSocket,clientIndex):
     """Lists the available clients & client can choose a peer to start chat with
     & it returns the address of the chosen client"""
@@ -444,7 +439,7 @@ def start_chat(connectionSocket,clientIndex):
     chosenOption = int(chosenOption)   
     # Error checking
     while chosenOption<1 or chosenOption>len(clientsList):
-        availClient = "That option does not exist\nPlease enter the number of the person you want to chat!\n"+print_Clients()
+        availClient = availClient + "That option does not exist\nPlease enter the number of the person you want to chat!\n"+print_Clients()
         output = create_Header("M", availClient)
         connectionSocket.send(output.encode())
         chosenOption = connectionSocket.recv(1024).decode() # get the option chosen by the user
@@ -454,7 +449,7 @@ def start_chat(connectionSocket,clientIndex):
     # Making sure that the client hasn't tried to start a chat with themselves 
     chosenClient = clientsList[chosenOption - 1]
     while chosenClient.getName()==clientsList[clientIndex].getName():
-        message = "You cannot start a chat with yourself, please choose another person.\n"+print_Clients()
+        message = "You can not start a chat with yourself, please choose another person\n"+print_Clients()
         output = create_Header("M", message)
         connectionSocket.send(output.encode())
         chosenOption = connectionSocket.recv(1024).decode() # get the option chosen by the user
@@ -464,14 +459,14 @@ def start_chat(connectionSocket,clientIndex):
 
     # If the client is offline
     if chosenClient.getStatus()=="OFFLINE":
-        message = "The client is offline so you can't chat with them.\n"
+        message = "The client is offline so you can't chat with them\n"
         output = create_Header("I", message)
         connectionSocket.send(output.encode())
         main_Menu(connectionSocket,clientIndex)
     
     # If the client is hidden
     elif chosenClient.getStatus()=="HIDDEN":
-        message = "The client is hidden and doesn't want to talk to anyone.\n"
+        message = "The client is hidden and doesn't want to talk to anyone\n"
         output = create_Header("I", message)
         connectionSocket.send(output.encode())
         main_Menu(connectionSocket,clientIndex)
@@ -503,7 +498,6 @@ def letter_Counter_Validation(size,body):
         return True
     else:
         return False
-
     
 def send_Reply(correct, counter, connectionSocket):
     """This method sends either a confirmation message that the full message was delivered,
@@ -538,15 +532,8 @@ def send_Reply(correct, counter, connectionSocket):
         connectionSocket.close()
         return ""
 
-
-def log_off(clientIndex):
-    """When the client logs off, their status changes to OFFLINE."""
-    clientsList[clientIndex].setStatus("OFFLINE")
-    save_Client(clientsList[clientIndex])   
-    print(clientsList[clientIndex].toString())
-
-
 def main_Menu(connectionSocket,clientIndex):
+    global clientsList
     """This method handles the main menu and all of its cases.
        It returns true if the method needs to be called again"""
     
@@ -581,8 +568,11 @@ def main_Menu(connectionSocket,clientIndex):
 
     # The user has decided to log off
     if option == "3":
-        log_off(clientIndex)
         output = "Thank you for using Datcord, Logging you off now!\nHave a nice day :)"
+        # Setting to make sure that the status is updated for other clients
+        if clientsList[clientIndex].getSatus()=="ONLINE":
+            clientsList[clientIndex].setStatus("OFFLINE")
+
         output = create_Header("X",output)
         connectionSocket.send(output.encode())
         connectionSocket.close()
@@ -596,7 +586,6 @@ def handle_client(connectionSocket, addr):
     clientIndex = first_Option(connectionSocket,addr)
     main_Menu(connectionSocket,clientIndex)
     connectionSocket.close()
-
 
 def main():
     # Starting up server
