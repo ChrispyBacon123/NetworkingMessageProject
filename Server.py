@@ -532,6 +532,14 @@ def send_Reply(correct, counter, connectionSocket):
         connectionSocket.close()
         return ""
 
+
+def log_off(clientIndex):
+    """When the client logs off, their status changes to OFFLINE."""
+    clientsList[clientIndex].setStatus("OFFLINE")
+    save_Client(clientsList[clientIndex])   
+    print(clientsList[clientIndex].toString())
+
+
 def main_Menu(connectionSocket,clientIndex):
     global clientsList
     """This method handles the main menu and all of its cases.
@@ -568,6 +576,7 @@ def main_Menu(connectionSocket,clientIndex):
 
     # The user has decided to log off
     if option == "3":
+        log_off(clientIndex)
         output = "Thank you for using Datcord, Logging you off now!\nHave a nice day :)"
         # Setting to make sure that the status is updated for other clients
         if clientsList[clientIndex].getSatus()=="ONLINE":
@@ -586,13 +595,6 @@ def handle_client(connectionSocket, addr):
     clientIndex = first_Option(connectionSocket,addr)
     main_Menu(connectionSocket,clientIndex)
     connectionSocket.close()
-
-
-def log_off(clientIndex):
-    """When the client logs off, their status changes to OFFLINE."""
-    clientsList[clientIndex].setStatus("OFFLINE")
-    save_Client(clientsList[clientIndex])   
-    print(clientsList[clientIndex].toString())
 
 
 def main():
