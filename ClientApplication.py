@@ -28,12 +28,9 @@ def request_retransmission(socket, IP, port):
 #----------- Client to Client -----------#
 #Using UDP
 
-def create_chat(name, status, IP, port):
+def create_chat(name, IP, port):
     chatSocket = socket(AF_INET, SOCK_DGRAM)
-    print("Chat with " + name + " has been started")
     print("To leave the chat enter 'DISCONNECT'")
-    print(name + ' is ' + status)
-    print("=======================================")
     msg = input('You: ') # The message to send to the other client
     timeout_count = 0 # Keeping track of how many times a timeout has occured
     timeout_flag = False # This flag becomes true when there have been 3 timeouts and the connection is terminated
@@ -83,20 +80,12 @@ def create_chat(name, status, IP, port):
     chatSocket.close() # Terminate the connection to the peer
 
 
-
-
-
-
-
-
-
-
 # Main function
 def main():
     #----------- Client to Server -----------#
     #Using TCP
     #serverName = socket.gethostbyname(socket.gethostname())
-    serverName = '192.168.101.250'
+    serverName = '196.24.144.227'
     serverPort = 6969
     clientSocket = socket(AF_INET, SOCK_STREAM)
     clientSocket.connect((serverName,serverPort))
@@ -117,13 +106,14 @@ def main():
 
     '''This while loop is for when the client is interacting with the server'''
     while flag != True:
-        start_time = time.time() # Saving the current time to keep track of any timeouts that occur
+        start_time = time.time()
         clientSocket.settimeout(30) # If the server does not respond within 30 seconds then a timeout will occur
         try:
             modifiedSentence = clientSocket.recv(1024) 
             header = modifiedSentence.decode()[:5] # Slicing the received string to get the header from the message
             msg = ''
 
+                
 
             if len(modifiedSentence.decode()) > 5:
                 msg = modifiedSentence.decode()[5:]
@@ -142,7 +132,6 @@ def main():
                 would mean that the user wants to log out of the server and therefore the program would end'''
                 print(msg)
                 clientSocket.close()# Terminate connection with server
-                flag = True
                 break
             elif header[:1] == 'A': # Acknowledgment
                 continue
@@ -151,12 +140,11 @@ def main():
                 continue
             elif header[:1] == 'S':
                 # splitting the message into an array to access each piece of the user data
-                user_data = msg.split() #[name, status, IP, port number]
+                user_data = msg.split() #[name, IP, port number]
                 peer_name = user_data[0]
-                peer_status = user_data[1]
                 peer_IP = user_data[2]
                 peer_port = user_data[3]
-                create_chat(peer_name, peer_status, peer_IP, peer_port)
+                create_chat(peer_name, peer_IP, peer_port)
                 continue
             else:
                 print('Invalid message') # In case the message does not have a valid header
