@@ -8,7 +8,8 @@ from ClientClass import *
 # clientsList =[]
 # Lock to synchronize clientsList
 lock = threading.Lock()
-FOLDER_PATH = "/Users/CrispyBacon/Desktop/Disscord Clients/"
+#FOLDER_PATH = "/Users/CrispyBacon/Desktop/Disscord Clients/"
+FOLDER_PATH = R"C:\Users\user-pc\OneDrive - University of Cape Town\2024\CSC3002F\Assignment 1\Disscord Clients"
 ipSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 ipSocket.connect(("8.8.8.8", 80))
 ipAddress = ipSocket.getsockname()[0]
@@ -174,7 +175,7 @@ def sign_in(connectionSocket,addr):
 
     # Ensures that the username exists in the server's list of clients
     while (not unique_Username(username, clientsList)):   # if username does not exist
-        message = "That doesn't exist..\nPlease enter another username:"
+        message = "That doesn't exist.. Enter BACK to sign up.\nOtherwise please enter another username:"
         message = create_Header("M",message)
         connectionSocket.send(message.encode())
         username = connectionSocket.recv(1024).decode()
@@ -273,7 +274,7 @@ def sign_up(connectionSocket,addr):
 
     # Look up username in the clients list to ensure that the username is unique
     while (unique_Username(username, clientsList)):   # if username taken
-        message = "That username is already taken.\nPlease enter another username:"
+        message = "That username is already taken. Enter BACK to cancel.\nOtherwise please enter another username:"
         message = create_Header("M",message)
         connectionSocket.send(message.encode())
         username = connectionSocket.recv(1024).decode()
@@ -297,7 +298,7 @@ def sign_up(connectionSocket,addr):
 
     # Error handling for if client tries to not have password
     while(password == ""):
-        message = "You can not have an empty password\nPlease enter your Password:"
+        message = "You can not have an empty password. Enter BACK to cancel.\nOtherwise please enter your Password:"
         message = create_Header("M",message)
         connectionSocket.send(message.encode())
         password = connectionSocket.recv(1024).decode()
@@ -328,11 +329,11 @@ def sign_up(connectionSocket,addr):
                 if port>999 and port<65535 and isinstance(port,int):
                     correct = True
                 else:
-                    message = f"That port number is not valid:"
+                    message = f"That port number is not valid. Enter BACK to cancel.\nOtherwise please enter a valid port number:\n"
                     message =create_Header("I",message)
                     connectionSocket.send(message.encode())
             else:
-                message = f"Please enter and integer for the port NUMBER:\n"
+                message = f"Please enter an integer for the port NUMBER:\n"
                 message =create_Header("I",message)
                 connectionSocket.send(message.encode())
 
