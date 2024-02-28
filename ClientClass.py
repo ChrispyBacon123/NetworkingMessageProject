@@ -7,6 +7,7 @@ class Client:
         self.__status = status
         self.__IP_add = ''
         self.__port = 0
+        self.__UDP_port = 0
         #The two leading underscores ensures the fields are private
 
     #Accessor to get the username
@@ -28,6 +29,10 @@ class Client:
     #Accessor to get the port
     def getPort(self):
         return self.__port
+    
+    #Accessor to get the UDP_port
+    def getUDPPort(self):
+        return self.__UDP_port
 
     #Mutator to change the IP address
     def setIP(self, newIP):
@@ -36,6 +41,10 @@ class Client:
     #Mutator to change the port of the client
     def setPort(self, newPort):
         self.__port = newPort
+
+    #Mutator to change the UDP_Port of the client
+    def setUDPPort(self, newPort):
+        self.__UDP_port = newPort
 
     #Mutator to change the password
     def setPassword(self, new_pass):

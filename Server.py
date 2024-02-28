@@ -438,7 +438,7 @@ def start_chat(connectionSocket,clientIndex):
     chosenOption = connectionSocket.recv(1024).decode() # get the option chosen by the user
     chosenOption = int(chosenOption)   
     # Error checking
-    while chosenOption<1 or chosenOption>len(clientIndex):
+    while chosenOption<1 or chosenOption>len(clientsList):
         availClient = availClient + "That option does not exist\nPlease enter the number of the person you want to chat!\n"+print_Clients()
         output = create_Header("M", availClient)
         connectionSocket.send(output.encode())
@@ -459,17 +459,17 @@ def start_chat(connectionSocket,clientIndex):
 
     # If the client is offline
     if chosenClient.getStatus()=="OFFLINE":
-        message = message + "The client is offline so you can't chat with them\n"
+        message = "The client is offline so you can't chat with them\n"
         output = create_Header("I", message)
         connectionSocket.send(output.encode())
-        main_Menu()
+        main_Menu(connectionSocket,clientIndex)
     
     # If the client is hidden
     elif chosenClient.getStatus()=="HIDDEN":
-        message = message + "The client is hidden and doesn't want to talk to anyone\n"
+        message = "The client is hidden and doesn't want to talk to anyone\n"
         output = create_Header("I", message)
         connectionSocket.send(output.encode())
-        main_Menu()
+        main_Menu(connectionSocket,clientIndex)
     
     else:
         # Need to send [name, IP, port number]
@@ -480,13 +480,13 @@ def start_chat(connectionSocket,clientIndex):
         peerIP = chosenClient.getIP()
         peerPort = chosenClient.getUDPPort()
         peerName = chosenClient.getName()
-        message= peerName+" "+peerIP+" "+peerPort
+        message= str(peerName)+" "+str(peerIP)+" "+str(peerPort)
         output = create_Header("S",message)
         connectionSocket.send(output.encode())
         
         # Maybe implement this (bring it back to main menu after chat ends)
         connectionSocket.recv(1024).decode()
-        main_Menu()
+        main_Menu(connectionSocket,clientIndex)
 
 
 def letter_Counter_Validation(size,body):
@@ -558,7 +558,7 @@ def main_Menu(connectionSocket,clientIndex):
     
     # Printing the list of all the clients
     if option == "1":
-        start_chat(connectionSocket,clientsList) # this must return peer's address
+        start_chat(connectionSocket,clientIndex) # this must return peer's address
         #return False
     
     if option == "2":
