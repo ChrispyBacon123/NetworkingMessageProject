@@ -137,10 +137,10 @@ def main():
                 break
             elif header[:1] == 'A': # Acknowledgment
                 continue
-            elif header[:1] == 'R': # Re-transmission request
+            elif header[:1] == 'R': # Retransmission request
                 clientSocket.send(sentence.encode())
                 continue
-            elif header[:1] == 'S':
+            elif header[:1] == 'S': # Start chat
                 # splitting the message into an array to access each piece of the user data
                 user_data = msg.split() #[name, IP, port number]
                 peer_name = user_data[0]
