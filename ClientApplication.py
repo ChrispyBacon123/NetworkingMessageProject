@@ -29,24 +29,28 @@ def request_retransmission(socket, IP, port):
 #----------- Client to Client -----------#
 #Using UDP
 
-def create_chat(name, IP, port):
-    # if(you are not the one receiving the request)
-    #   send_request()
+# The flag is to keep track of whether you have started a chat or you accepted a chat request: 
+# True = you started the chat; False = you accepted a request
+def create_chat(name, IP, port, chat_request_flag):
+    '''If you started the chat then you will send the first message and the user who accepted the chat request
+    will have to wait to receive that message first'''
     chatSocket = socket(AF_INET, SOCK_DGRAM)
     port = int(port) # ensure port is int
     chatSocket.bind(('', port))
     print("To leave the chat enter 'DISCONNECT'")
-    msg = input('You: ') # The message to send to the other client
+
+    msg = '' # Initialising the msg variable for the while loop condition
     timeout_count = 0 # Keeping track of how many times a timeout has occured
     timeout_flag = False # This flag becomes true when there have been 3 timeouts and the connection is terminated
-    while msg.upper() != 'DISCONNECT': # The upper() method is used to make the condition case insensitive
 
+    # If you started the chat then you send the first message
+    # This is just to send the initial message, all messages thereafter will be sent in the while loop
+    if chat_request_flag:
+        msg = input('You: ') # The message to send to the other client
         msg_with_header = create_Header('C', msg) # Adding the header to the message
-        
         chatSocket.sendto(msg_with_header.encode(), (IP, port)) # sending the message with the header to the peer
 
-        start_time = time.time()
-        chatSocket.settimeout(30)  # 30 seconds timeout
+    while msg.upper() != 'DISCONNECT': # The upper() method is used to make the condition case insensitive
 
         try:
             # Receive data from the socket
@@ -64,6 +68,13 @@ def create_chat(name, IP, port):
             elif header[:1] == 'R': # This means the chat message was not sent or was corrupted and the peer has requested you to re-send it
                 chatSocket.sendto(msg_with_header.encode(), (IP, port)) # re-sending the message
                 continue
+
+            msg_with_header = create_Header('C', msg) # Adding the header to the message
+        
+            chatSocket.sendto(msg_with_header.encode(), (IP, port)) # sending the message with the header to the peer
+
+            start_time = time.time()
+            chatSocket.settimeout(30)  # 30 seconds timeout
 
         except timeout:
             # If timeout occurs
@@ -92,7 +103,7 @@ def main():
     #----------- Client to Server -----------#
     #Using TCP
     #serverName = socket.gethostbyname(socket.gethostname())
-    serverName = '196.42.100.57'
+    serverName = '192.168.101.246'
     serverPort = 6969
     clientSocket = socket(AF_INET,SOCK_STREAM)
     clientSocket.connect((serverName,serverPort))
@@ -154,13 +165,25 @@ def main():
                 peer_name = user_data[0]
                 peer_IP = user_data[1]
                 peer_port = user_data[2]
-                create_chat(peer_name, peer_IP, peer_port)
+                create_chat(peer_name, peer_IP, peer_port, True)
                 continue
             elif header[:1] == 'P': # Request for new chat
-                # P####PeerName 
+                # P####PeerName IP Port
+                user_data = msg.split() #[name, IP, port number]
+                peer_name = user_data[0]
+                peer_IP = user_data[1]
+                peer_port = user_data[2]
                 print(msg + ' wants to start a chat:\n')
                 print('1. Accept')
-                print('2. Decline')
+                print('2. Decline\n')
+                choice = input() # Whether the user chooses to accept or deny the request
+
+                if choice == 1: # Accept the request
+                    create_chat(peer_name, peer_IP, peer_port, False)
+                elif choice == 2: # Decline the request
+                    request_response = 'User has delcined the request to chat.'
+                    clientSocket.send((create_Header('I', request_response)).encode()) # Send a response to the peer telling them their request was denied
+                    continue
             else:
                 print('Invalid message') # In case the message does not have a valid header
                 flag = True
