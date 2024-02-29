@@ -5,10 +5,10 @@ import time
 from ClientClass import *
 
 # # List containing all the client details
-# clientsList =[]
+clientsList =[]
 # Lock to synchronize clientsList
 lock = threading.Lock()
-FOLDER_PATH = "/Users/CrispyBacon/Desktop/Disscord Clients/"
+FOLDER_PATH = "/Users/Elijah/Documents/BbuSc_ComSci/CSC3002F/Networks_Assignment_1/Client_Files"
 ipSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 ipSocket.connect(("8.8.8.8", 80))
 ipAddress = ipSocket.getsockname()[0]
@@ -64,7 +64,7 @@ def get_Client_Index(name):
 def update_Client(fileName):
     """Deletes the file of the client"""
     fileName = fileName+".txt"
-    FOLDERPATH = "/Users/CrispyBacon/Desktop/Disscord Clients/"
+    FOLDERPATH = "/Users/Elijah/Documents/BbuSc_ComSci/CSC3002F/Networks_Assignment_1/Client_Files"
     try:
         # Iterate through all files in the folder
         for file in os.listdir(FOLDERPATH):
@@ -462,6 +462,7 @@ def start_chat(connectionSocket,clientIndex):
         message = "The client is offline so you can't chat with them\n"
         output = create_Header("I", message)
         connectionSocket.send(output.encode())
+        connectionSocket.recv(1024).decode() # This line is to receive the acknowledgement message sent from the client
         main_Menu(connectionSocket,clientIndex)
     
     # If the client is hidden
@@ -469,13 +470,18 @@ def start_chat(connectionSocket,clientIndex):
         message = "The client is hidden and doesn't want to talk to anyone\n"
         output = create_Header("I", message)
         connectionSocket.send(output.encode())
+        connectionSocket.recv(1024).decode() # This line is to receive the acknowledgement message sent from the client
+
         main_Menu(connectionSocket,clientIndex)
     
     else:
         # Need to send [name, IP, port number]
         message = "Starting a chat with " + chosenClient.getName() + " ..."
-        output = create_Header("M", message)
+        output = create_Header("I", message)
         connectionSocket.send(output.encode())
+
+        # This line is crucial to ensure that the I message and S message are not sent together as one string
+        connectionSocket.recv(1024).decode()
 
         peerIP = chosenClient.getIP()
         peerPort = chosenClient.getUDPPort()

@@ -1,4 +1,5 @@
-from socket import *
+from socket import socket, timeout, AF_INET, SOCK_DGRAM, SOCK_STREAM
+
 import time
 
 def create_Header(messageType,body):
@@ -29,7 +30,11 @@ def request_retransmission(socket, IP, port):
 #Using UDP
 
 def create_chat(name, IP, port):
+    # if(you are not the one receiving the request)
+    #   send_request()
     chatSocket = socket(AF_INET, SOCK_DGRAM)
+    port = int(port) # ensure port is int
+    chatSocket.bind(('', port))
     print("To leave the chat enter 'DISCONNECT'")
     msg = input('You: ') # The message to send to the other client
     timeout_count = 0 # Keeping track of how many times a timeout has occured
@@ -37,7 +42,7 @@ def create_chat(name, IP, port):
     while msg.upper() != 'DISCONNECT': # The upper() method is used to make the condition case insensitive
 
         msg_with_header = create_Header('C', msg) # Adding the header to the message
-        port = int(port) # ensure port is int
+        
         chatSocket.sendto(msg_with_header.encode(), (IP, port)) # sending the message with the header to the peer
 
         start_time = time.time()
@@ -45,7 +50,7 @@ def create_chat(name, IP, port):
 
         try:
             # Receive data from the socket
-            response, serverAddress = chatSocket.recvfrom(2048) # saving the response from the peer to response, serverAddress is not used
+            response, peerAddress = chatSocket.recvfrom(2048) # saving the response from the peer to response, peerAddress is not used
             header = response.decode()[:5] # saving just the header
 
             # If data is received before timeout
@@ -60,7 +65,7 @@ def create_chat(name, IP, port):
                 chatSocket.sendto(msg_with_header.encode(), (IP, port)) # re-sending the message
                 continue
 
-        except socket.timeout:
+        except timeout:
             # If timeout occurs
             timeout_count += 1 # Increasing the timeout counter
             if timeout_count == 3:
@@ -87,9 +92,9 @@ def main():
     #----------- Client to Server -----------#
     #Using TCP
     #serverName = socket.gethostbyname(socket.gethostname())
-    serverName = '196.24.144.227'
+    serverName = '196.42.100.57'
     serverPort = 6969
-    clientSocket = socket(AF_INET, SOCK_STREAM)
+    clientSocket = socket(AF_INET,SOCK_STREAM)
     clientSocket.connect((serverName,serverPort))
     flag = False # Flag used to exit the loop
     timeout_count = 0 # Keeping track of how many times a timeout has occured
@@ -103,6 +108,7 @@ def main():
     # C = Chat message
     # A = Acknowledgement
     # R = Re-transmission request
+    # P = (Please) Request to start a chat with another client
     # Example: M1024 (1024 is the number of characters in the string)
 
 
@@ -128,6 +134,8 @@ def main():
                 continue
             elif header[:1] == 'I': # Information
                 print(msg) # Display the message
+                acknowledge = 'A0000'
+                clientSocket.send(acknowledge.encode()) # This is to tell the server that the message has been received
                 continue
             elif header[:1] == 'X': # Exit
                 '''Since this loop is for when the client is interacting with the server an exit message 
@@ -144,15 +152,20 @@ def main():
                 # splitting the message into an array to access each piece of the user data
                 user_data = msg.split() #[name, IP, port number]
                 peer_name = user_data[0]
-                peer_IP = user_data[2]
-                peer_port = user_data[3]
+                peer_IP = user_data[1]
+                peer_port = user_data[2]
                 create_chat(peer_name, peer_IP, peer_port)
                 continue
+            elif header[:1] == 'P': # Request for new chat
+                # P####PeerName 
+                print(msg + ' wants to start a chat:\n')
+                print('1. Accept')
+                print('2. Decline')
             else:
                 print('Invalid message') # In case the message does not have a valid header
                 flag = True
 
-        except socket.timeout:
+        except timeout:
             # If timeout occurs
             timeout_count += 1 # Increasing the timeout counter
             if timeout_count == 3:
