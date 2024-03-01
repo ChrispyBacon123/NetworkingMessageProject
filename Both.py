@@ -54,11 +54,11 @@ def recieve():
             # header = message[:5]
             # chatNo = message[7:10]
             # body = message[11:]
-            # print(message)
+            print(message)
             # print(body)
             # print(chatNo)
             # print(header)
-            print(letter_Counter_Validation())
+            #print(letter_Counter_Validation())
         except:
             pass
 
