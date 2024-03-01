@@ -1,6 +1,9 @@
 from socket import socket, timeout, AF_INET, SOCK_DGRAM, SOCK_STREAM
-
+import threading
+import queue
 import time
+import ClientClass
+
 
 def create_Header(messageType,body):
     """Given the type of message and the body, this method will return a header for the message
@@ -20,10 +23,12 @@ def create_Header(messageType,body):
     out = out+size+body
     return out
 
+
 '''This function will be called if the message received is corrupted or nothing was received'''
 def request_retransmission(socket, IP, port):
     header = 'R0000' # the re-transmission request message
     socket.sendto(header.encode(), (IP, port)) # sending the re-transmission request to the peer
+
 
 
 #----------- Client to Client -----------#
@@ -31,18 +36,75 @@ def request_retransmission(socket, IP, port):
 
 # The flag is to keep track of whether you have started a chat or you accepted a chat request: 
 # True = you started the chat; False = you accepted a request
-def create_chat(name, IP, port, chat_request_flag):
+
+
+def create_Header(messageType,body):
+    """Given the type of message and the body, this method will return a header for the message
+    and return the message with the header attactched"""
+
+    # Attatching the header 
+    out = messageType
+
+    # Determining the size of the message
+    arr = list(body)
+    size = str(len(arr))
+
+    # Padding if the size of the message is less than 1000 characters
+    while(len(size)<4):
+        size = "0"+size
+    '''
+    # Padding if the size of the number is less than 1000
+    while (len(chatNo)<4):
+        chatNoS = "0"+chatNo
+    '''
+    #Attatching the body
+    out = out+size+'*'+chatNoS+'*'+body
+    return out
+
+
+def receive():
+   while True:
+        try:
+            message, _ = server.recvfrom(1024)
+            print(message)
+
+        except:
+            pass
+
+
+def send(IP, port):
+    while True:
+        message = input("")
+        if message == "DISCONNECT":
+            message = ''
+            message = create_Header("X",message)
+            server.sendto(message.encode(),(IP, port))
+        else:
+            message = "You: "+message
+            message = create_Header("C",message)
+            server.sendto(message.encode(),(IP, port))
+
+
+#def create_chat(name, IP, port, chat_request_flag):
+def create_chat(name, IP, port):
     '''If you started the chat then you will send the first message and the user who accepted the chat request
     will have to wait to receive that message first'''
     chatSocket = socket(AF_INET, SOCK_DGRAM)
     port = int(port) # ensure port is int
-    chatSocket.bind(('', port))
+    chatSocket.bind((IP, port))
     print("To leave the chat enter 'DISCONNECT'")
 
     msg = '' # Initialising the msg variable for the while loop condition
     timeout_count = 0 # Keeping track of how many times a timeout has occured
     timeout_flag = False # This flag becomes true when there have been 3 timeouts and the connection is terminated
 
+    t1 = threading.Thread(target=receive)
+    t2 = threading.Thread(target=send, args=(IP, port))
+
+    t1.start()
+    t2.start()
+    print("threads have started")
+    '''
     # If you started the chat then you send the first message
     # This is just to send the initial message, all messages thereafter will be sent in the while loop
     if chat_request_flag:
@@ -95,15 +157,14 @@ def create_chat(name, IP, port, chat_request_flag):
         # This message must not be printed if the connection is being terminated because there were too many timeouts
         chatSocket.sendto(('Peer has left the chat').encode(), (IP, port))
     chatSocket.close() # Terminate the connection to the peer
-    
+    '''
 # Add some way to get back to menu
 
 # Main function
 def main():
     #----------- Client to Server -----------#
     #Using TCP
-    #serverName = socket.gethostbyname(socket.gethostname())
-    serverName = '192.168.101.246'
+    serverName = '192.168.101.217'
     serverPort = 6969
     clientSocket = socket(AF_INET,SOCK_STREAM)
     clientSocket.connect((serverName,serverPort))
@@ -131,8 +192,6 @@ def main():
             modifiedSentence = clientSocket.recv(1024) 
             header = modifiedSentence.decode()[:5] # Slicing the received string to get the header from the message
             msg = ''
-
-                
 
             if len(modifiedSentence.decode()) > 5:
                 msg = modifiedSentence.decode()[5:]
@@ -165,7 +224,8 @@ def main():
                 peer_name = user_data[0]
                 peer_IP = user_data[1]
                 peer_port = user_data[2]
-                create_chat(peer_name, peer_IP, peer_port, True)
+                create_chat(peer_name, peer_IP, peer_port)
+                #create_chat(peer_name, peer_IP, peer_port, True)
                 continue
             elif header[:1] == 'P': # Request for new chat
                 # P####PeerName IP Port
