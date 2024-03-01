@@ -113,12 +113,11 @@ def save_Client(client):
     except IOError:
         print("The Client could not be saved")
 
-def print_Clients():
+def print_Clients(aList):
     """This function returns a string list of the list of clients registred on the server"""
-    global clientsList
     counter = 1
     availClient = "Available:\n"
-    for item in clientsList:
+    for item in aList:
         availClient = availClient+str(counter)+" "+item.toString()+"\n" # list the available clients
         counter+= 1
     availClient = availClient + "Please enter the number of the person you want to chat!"
@@ -428,14 +427,14 @@ def start_chat(connectionSocket,clientIndex):
     & it returns the address of the chosen client"""
     global clientsList
     # Printing list of available clients
-    output = create_Header("M", print_Clients())
+    output = create_Header("M", print_Clients(clientsList))
     connectionSocket.send(output.encode())
 
     chosenOption = connectionSocket.recv(1024).decode() # get the option chosen by the user
     chosenOption = int(chosenOption)   
     # Error checking
     while chosenOption<1 or chosenOption>len(clientsList):
-        availClient = availClient + "That option does not exist\nPlease enter the number of the person you want to chat!\n"+print_Clients()
+        availClient = "That option does not exist\nPlease enter the number of the person you want to chat!\n"+print_Clients(clientsList)
         output = create_Header("M", availClient)
         connectionSocket.send(output.encode())
         chosenOption = connectionSocket.recv(1024).decode() # get the option chosen by the user
@@ -445,7 +444,7 @@ def start_chat(connectionSocket,clientIndex):
     # Making sure that the client hasn't tried to start a chat with themselves 
     chosenClient = clientsList[chosenOption - 1]
     while chosenClient.getName()==clientsList[clientIndex].getName():
-        message = "You can not start a chat with yourself, please choose another person\n"+print_Clients()
+        message = "You cannot start a chat with yourself, please choose another person.\n"+print_Clients(clientsList)
         output = create_Header("M", message)
         connectionSocket.send(output.encode())
         chosenOption = connectionSocket.recv(1024).decode() # get the option chosen by the user
@@ -455,28 +454,35 @@ def start_chat(connectionSocket,clientIndex):
 
     # If the client is offline
     if chosenClient.getStatus()=="OFFLINE":
-        message = "The client is offline so you can't chat with them\n"
+        message = "The client is offline so you can't chat with them.\n"
         output = create_Header("I", message)
         connectionSocket.send(output.encode())
-        connectionSocket.recv(1024).decode() # This line is to receive the acknowledgement message sent from the client
+
+        # This line is CRUCIAL to ensure that the 'I'message and 'S'message are not sent together as one string
+        connectionSocket.recv(1024).decode()
+        
         main_Menu(connectionSocket,clientIndex)
     
     # If the client is hidden
     elif chosenClient.getStatus()=="HIDDEN":
-        message = "The client is hidden and doesn't want to talk to anyone\n"
+        message = "The client is hidden and doesn't want to talk to anyone.\n"
         output = create_Header("I", message)
         connectionSocket.send(output.encode())
-        connectionSocket.recv(1024).decode() # This line is to receive the acknowledgement message sent from the client
 
+        # This line is CRUCIAL to ensure that the 'I'message and 'S'message are not sent together as one string
+        connectionSocket.recv(1024).decode()
+        
         main_Menu(connectionSocket,clientIndex)
     
     else:
         # Need to send [name, IP, port number]
         message = "Starting a chat with " + chosenClient.getName() + " ..."
+        user = clientsList[clientIndex] # the user themself
+        chosenClient.addChatRequests(user)
         output = create_Header("I", message)
         connectionSocket.send(output.encode())
 
-        # This line is crucial to ensure that the I message and S message are not sent together as one string
+        # This line is CRUCIAL to ensure that the 'I'message and 'S'message are not sent together as one string
         connectionSocket.recv(1024).decode()
 
         peerIP = chosenClient.getIP()
@@ -485,11 +491,10 @@ def start_chat(connectionSocket,clientIndex):
         message= str(peerName)+" "+str(peerIP)+" "+str(peerPort)
         output = create_Header("S",message)
         connectionSocket.send(output.encode())
-        
+
         # Maybe implement this (bring it back to main menu after chat ends)
-        # client needs send an empty string after ending a chat to come back to this point
-        connectionSocket.recv(1024).decode()
-        main_Menu(connectionSocket,clientIndex)
+        #connectionSocket.recv(1024).decode()
+        #main_Menu(connectionSocket,clientIndex)
 
 
 def letter_Counter_Validation(size,body):
@@ -541,6 +546,35 @@ def log_off(clientIndex):
     clientsList[clientIndex].setStatus("OFFLINE")
     save_Client(clientsList[clientIndex])   
     print(clientsList[clientIndex].toString())
+
+
+def chat_requests(connectionSocket,clientIndex):
+    """Prints the list of clients who requested to chat with the user."""
+    global clientsList
+    chat_requests = clientsList[clientIndex].getChatRequests()
+    if len(chat_requests) == 0:
+        message = "0 request... Why don't YOU start a chat?"
+        message = create_Header("I", message)
+        connectionSocket.send(message.encode())
+
+        # This line is CRUCIAL to ensure that the 'I'message and 'S'message are not sent together as one string
+        connectionSocket.recv(1024).decode()
+        
+    else:
+        output = create_Header("M", print_Clients(chat_requests)) # print list of requests
+        connectionSocket.send(output.encode())
+
+        # Get input from the user and start chat with the peer
+
+    
+    exitmessage = "Directing back to main menu.\n"
+    exitmessage = create_Header("I", exitmessage)
+    connectionSocket.send(exitmessage.encode())
+    
+    # This line is CRUCIAL to ensure that the 'I'message and 'S'message are not sent together as one string
+    connectionSocket.recv(1024).decode()
+
+    main_Menu(connectionSocket,clientIndex)
 
 
 def main_Menu(connectionSocket,clientIndex):
