@@ -173,17 +173,18 @@ def main():
                 peer_name = user_data[0]
                 peer_IP = user_data[1]
                 peer_port = user_data[2]
-                print(msg + ' wants to start a chat:\n')
-                print('1. Accept')
-                print('2. Decline\n')
-                choice = input() # Whether the user chooses to accept or deny the request
+                #print(msg + ' wants to start a chat:\n')
+                #print('1. Accept')
+                #print('2. Decline\n')
+                #choice = input() # Whether the user chooses to accept or deny the request
 
-                if choice == 1: # Accept the request
-                    create_chat(peer_name, peer_IP, peer_port, False)
-                elif choice == 2: # Decline the request
-                    request_response = 'User has delcined the request to chat.'
-                    clientSocket.send((create_Header('I', request_response)).encode()) # Send a response to the peer telling them their request was denied
-                    continue
+                #if choice == 1: # Accept the request
+                create_chat(peer_name, peer_IP, peer_port, False)
+                continue
+                # elif choice == 2: # Decline the request
+                #     request_response = 'User has delcined the request to chat.'
+                #     clientSocket.send((create_Header('I', request_response)).encode()) # Send a response to the peer telling them their request was denied
+                #     continue
             else:
                 print('Invalid message') # In case the message does not have a valid header
                 flag = True
