@@ -505,10 +505,10 @@ def start_chat(connectionSocket,clientIndex):
 
             # This line is CRUCIAL to ensure that the 'I'message and 'S'message are not sent together as one string
             connectionSocket.recv(1024).decode()
-
+            
             while user.getInChat() == False: # prints dots ... till peer accepts the request
                 print_dots(connectionSocket)
-
+            
             message = chosenClient.getName() + " accepted! Starting the chat:\n"
             output = create_Header("I", message)
             connectionSocket.send(output.encode())
@@ -521,6 +521,8 @@ def start_chat(connectionSocket,clientIndex):
             message= str(peerName)+" "+str(peerIP)+" "+str(peerPort)
             output = create_Header("S",message)
             connectionSocket.send(output.encode())
+            connectionSocket.recv(1024).decode()
+            
             
             
             # Maybe implement this (bring it back to main menu after chat ends)
@@ -626,14 +628,18 @@ def chat_requests(connectionSocket,clientIndex):
         clientsList[index].setInChat()
         print(clientsList[index].toString())
 
+        user = clientsList[clientIndex]
+        
         # start chat now
-        clientIP = clientIndex.getIP()
-        clientPort = chosenClient.getUDPPort()
-        clientName = chosenClient.getName()
-        message= str(peerName)+" "+str(peerIP)+" "+str(peerPort)
+        username = user.getName()
+        userIP = user.getIP()
+        userPort = user.getUDPPort()
+        
+        message= str(username)+" "+str(userIP)+" "+str(userPort)
         output = create_Header("S",message)
         connectionSocket.send(output.encode())
-        
+        # This line is CRUCIAL to ensure that the 'I'message and 'S'message are not sent together as one string
+        connectionSocket.recv(1024).decode()
 
     
     
