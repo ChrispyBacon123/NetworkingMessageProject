@@ -8,6 +8,7 @@ class Client:
         self.__IP_add = ''
         self.__port = 0
         self.__UDP_port = 0
+        self.__chat_requests = []
         #The two leading underscores ensures the fields are private
 
     #Accessor to get the username
@@ -34,6 +35,10 @@ class Client:
     def getUDPPort(self):
         return self.__UDP_port
 
+    #Accessor to get list of chat requests
+    def getChatRequests(self):
+        return self.__chat_requests
+
     #Mutator to change the IP address
     def setIP(self, newIP):
         self.__IP_add = newIP
@@ -53,6 +58,10 @@ class Client:
     #Mutator to change the user's visibility status
     def setStatus(self, new_status):
         self.__status = new_status
+
+    #Mutator to add string with a Client's info (name, IP_add, UDP_port) to the list of chat requests
+    def setChatRequests(self, new_chat_request):
+        self.__chat_request.add(new_chat_request)
 
     #Method to print out the information of a client for other clients to see
     def toString(self):
