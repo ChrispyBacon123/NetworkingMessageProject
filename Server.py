@@ -153,6 +153,7 @@ def first_Option(connectionSocket,addr):
         clientIndex = sign_up(connectionSocket,addr)
         return clientIndex
 
+
 def sign_in(connectionSocket,addr):
     """This method handles the process of signing in a client to the server"""
     clientsList
@@ -174,7 +175,7 @@ def sign_in(connectionSocket,addr):
 
     # Ensures that the username exists in the server's list of clients
     while (not unique_Username(username, clientsList)):   # if username does not exist
-        message = "That doesn't exist..\nPlease enter another username:"
+        message = "That doesn't exist.. Enter BACK to sign up.\nOtherwise please enter another username:"
         message = create_Header("M",message)
         connectionSocket.send(message.encode())
         username = connectionSocket.recv(1024).decode()
@@ -212,47 +213,46 @@ def sign_in(connectionSocket,addr):
     correct = False
 
     # Get the UDPPort
-    while not correct:
-            message = f"Please enter a valid port that will be used to message other clients:"
-            message =create_Header("M",message)
-            connectionSocket.send(message.encode())
+    message = f"Please enter a valid port (10000 < x < 65535) that will be used to message other clients:"
+    message =create_Header("M",message)
+    connectionSocket.send(message.encode())
+    while not correct:        
             inputPort = connectionSocket.recv(1024).decode()
-
             if inputPort.isdigit():
                 port = int(inputPort)
 
-            # If Client wants to go back 
-            if "BACK" == port:
-                clientIndex = first_Option(connectionSocket,addr)
-                return clientIndex
-                
-            if  isinstance(port,int):
-                if port>10000 and port<65535 and isinstance(port,int):
+                if port>10000 and port<65535: # and isinstance(port,int):
                     correct = True
                 else:
-                    message = f"That port number is not valid:"
-                    message =create_Header("I",message)
+                    message = "That port number is not valid. Please enter a valid port number:"
+                    message =create_Header("M",message)
                     connectionSocket.send(message.encode())
+
+            # If Client wants to go back 
+            elif inputPort == "BACK":
+                clientIndex = first_Option(connectionSocket,addr)
+                return clientIndex
             else:
-                message = f"Please enter and integer for the port NUMBER:\n"
-                message =create_Header("I",message)
+                message = "Please enter an integer for the port NUMBER:"
+                message =create_Header("M",message)
                 connectionSocket.send(message.encode())
+       
+            
+    #  If all the data entered is correct
+    if clientsList[get_Client_Index(username)].getPassword() == password and correct:
+        # Setting the client's details
+        counter = get_Client_Index(username)
+        clientsList[counter].setIP(addr[0])
+        clientsList[counter].setPort(addr[1])
+        clientsList[counter].setUDPPort(int(port))
+        if clientsList[counter].getStatus() == "OFFLINE":
+            clientsList[counter].setStatus("ONLINE")
 
 
-            #  If all the data entered is correct
-            if clientsList[get_Client_Index(username)].getPassword() == password and correct:
-                # Setting the client's details
-                counter = get_Client_Index(username)
-                clientsList[counter].setIP(addr[0])
-                clientsList[counter].setPort(addr[1])
-                clientsList[counter].setUDPPort(int(port))
-                if clientsList[counter].getStatus() == "OFFLINE":
-                    clientsList[counter].setStatus("ONLINE")
+        for i in clientsList:
+            print(i.toString())
+        return counter
 
-
-                for i in clientsList:
-                    print(i.toString())
-                return counter
                       
 def sign_up(connectionSocket,addr):
     """This method handles the process of signing up a new account to the server"""
@@ -270,10 +270,9 @@ def sign_up(connectionSocket,addr):
         clientIndex = first_Option(connectionSocket,addr)
         return clientIndex
 
-
     # Look up username in the clients list to ensure that the username is unique
     while (unique_Username(username, clientsList)):   # if username taken
-        message = "That username is already taken.\nPlease enter another username:"
+        message = "That username is already taken. Enter BACK to cancel.\nOtherwise please enter another username:"
         message = create_Header("M",message)
         connectionSocket.send(message.encode())
         username = connectionSocket.recv(1024).decode()
@@ -282,7 +281,6 @@ def sign_up(connectionSocket,addr):
             clientIndex = first_Option(connectionSocket,addr)
             return clientIndex
     
-
     # Determining password for client
     message = "Please make your Password:"
     message = create_Header("M",message)
@@ -297,7 +295,7 @@ def sign_up(connectionSocket,addr):
 
     # Error handling for if client tries to not have password
     while(password == ""):
-        message = "You can not have an empty password\nPlease enter your Password:"
+        message = "You can not have an empty password. Enter BACK to cancel.\nOtherwise please enter your Password:"
         message = create_Header("M",message)
         connectionSocket.send(message.encode())
         password = connectionSocket.recv(1024).decode()
@@ -309,33 +307,31 @@ def sign_up(connectionSocket,addr):
         
     correct = False
 
-        # Get the UDPPort
-    while not correct:
-            message = f"Please enter a valid port that will be used to message other clients:"
-            message =create_Header("M",message)
-            connectionSocket.send(message.encode())
+    # Get the UDPPort
+    message = f"Please enter a valid port (10000 < x < 65535) that will be used to message other clients:"
+    message =create_Header("M",message)
+    connectionSocket.send(message.encode())
+    while not correct:        
             inputPort = connectionSocket.recv(1024).decode()
-
             if inputPort.isdigit():
                 port = int(inputPort)
 
-            # If Client wants to go back 
-            if "BACK" == port:
-                clientIndex = first_Option(connectionSocket,addr)
-                return clientIndex
-                
-            if  isinstance(port,int):
-                if port>10000 and port<65535 and isinstance(port,int):
+                if port>10000 and port<65535: # and isinstance(port,int):
                     correct = True
                 else:
-                    message = f"That port number is not valid:"
-                    message =create_Header("I",message)
+                    message = "That port number is not valid. Please enter a valid port number:"
+                    message =create_Header("M",message)
                     connectionSocket.send(message.encode())
-            else:
-                message = f"Please enter and integer for the port NUMBER:\n"
-                message =create_Header("I",message)
-                connectionSocket.send(message.encode())
 
+            # If Client wants to go back 
+            elif inputPort == "BACK":
+                clientIndex = first_Option(connectionSocket,addr)
+                return clientIndex
+            else:
+                message = "Please enter an integer for the port NUMBER:"
+                message =create_Header("M",message)
+                connectionSocket.send(message.encode())
+       
 
     # Data that has been validated
     aClient = Client(username, password, "ONLINE")    # create new instance of client
