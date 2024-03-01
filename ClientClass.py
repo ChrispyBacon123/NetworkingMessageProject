@@ -9,6 +9,7 @@ class Client:
         self.__port = 0
         self.__UDP_port = 0
         self.__chat_requests = []
+        self.__in_chat = False # bool variable to indicate if (self) is in chat
         #The two leading underscores ensures the fields are private
 
     #Accessor to get the username
@@ -62,6 +63,14 @@ class Client:
     #Mutator to add string with a Client's info (name, IP_add, UDP_port) to the list of chat requests
     def addChatRequests(self, new_chat_request):
         self.__chat_requests.append(new_chat_request)
+
+        #Mutator to set in_chat variable to True
+    def setInChat(self):
+        self.__in_chat = True
+
+    #Mutator to set in_chat variable to False
+    def setNotInChat(self):
+        self.__in_chat = False
 
     #Method to print out the information of a client for other clients to see
     def toString(self):
