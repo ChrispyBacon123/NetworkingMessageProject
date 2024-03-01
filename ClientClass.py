@@ -61,7 +61,7 @@ class Client:
 
     #Mutator to add string with a Client's info (name, IP_add, UDP_port) to the list of chat requests
     def addChatRequests(self, new_chat_request):
-        self.__chat_requests.add(new_chat_request)
+        self.__chat_requests.append(new_chat_request)
 
     #Method to print out the information of a client for other clients to see
     def toString(self):
