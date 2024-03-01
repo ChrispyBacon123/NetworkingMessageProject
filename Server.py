@@ -544,7 +544,6 @@ def log_off(clientIndex):
 
 
 def main_Menu(connectionSocket,clientIndex):
-    global clientsList
     """This method handles the main menu and all of its cases.
        It returns true if the method needs to be called again"""
     
@@ -554,7 +553,8 @@ def main_Menu(connectionSocket,clientIndex):
     menu = "\t\tMain menu\n=======================================\n"
     menu = menu +"1. Start a chat\n"
     menu = menu +"2. Settings\n"
-    menu = menu +"3. Log Out"
+    menu = menu +"3. Chat Requests\n"
+    menu = menu +"4. Log Out"
 
     output = create_Header("M",menu)
     connectionSocket.send(output.encode())
@@ -562,34 +562,30 @@ def main_Menu(connectionSocket,clientIndex):
     optionM = connectionSocket.recv(1024).decode()
     option = str(optionM) 
     
-    if option not in "123":
-        output = "Please choose option 1, 2 or 3\n" + menu
+    if option not in "1234":
+        output = "Please choose option 1, 2, 3 or 4\n" + menu
         output = create_Header("M",output)
         connectionSocket.send(output.encode())
-        #return True
-    
+        
     # Printing the list of all the clients
     if option == "1":
         start_chat(connectionSocket,clientIndex) # this must return peer's address
-        #return False
     
-    if option == "2":
+    elif option == "2":
         settings(connectionSocket,clientIndex)
-        #return False
+
+    # The user checks for any chat requests
+    elif option == "3":
+        chat_requests(clientIndex)
 
     # The user has decided to log off
-    if option == "3":
+    else:
         log_off(clientIndex)
         output = "Thank you for using Datcord, Logging you off now!\nHave a nice day :)"
-        # Setting to make sure that the status is updated for other clients
-        if clientsList[clientIndex].getSatus()=="ONLINE":
-            clientsList[clientIndex].setStatus("OFFLINE")
-
         output = create_Header("X",output)
         connectionSocket.send(output.encode())
         connectionSocket.close()
-        #return False
- 
+        
  
 # Main Funtions 
 def handle_client(connectionSocket, addr):
