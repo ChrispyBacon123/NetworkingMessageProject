@@ -217,7 +217,7 @@ def create_chat(peer_name, peer_IP, peer_port, user_port, user_IP):
 # Main function
 def main():
     #----------- Client to Server -----------#
-    #Using TCP
+    #Using TCP 
     serverName = '192.168.101.250'
     serverPort = 6969
     clientSocket = socket(AF_INET,SOCK_STREAM)
