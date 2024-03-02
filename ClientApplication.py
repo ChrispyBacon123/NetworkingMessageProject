@@ -241,7 +241,7 @@ def main():
     '''This while loop is for when the client is interacting with the server'''
     while flag != True:
         start_time = time.time()
-        clientSocket.settimeout(30) # If the server does not respond within 30 seconds then a timeout will occur
+        clientSocket.settimeout(10800) # If the server does not respond within 3 hours then a timeout will occur
         try:
             modifiedSentence = clientSocket.recv(1024) 
             header = modifiedSentence.decode()[:5] # Slicing the received string to get the header from the message

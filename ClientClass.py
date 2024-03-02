@@ -35,6 +35,9 @@ class Client:
     #Accessor to get the UDP_port
     def getUDPPort(self):
         return self.__UDP_port
+    
+    def getInChat(self):
+        return self.__in_chat
 
     #Accessor to get list of chat requests
     def getChatRequests(self):
@@ -63,6 +66,10 @@ class Client:
     #Mutator to add string with a Client's info (name, IP_add, UDP_port) to the list of chat requests
     def addChatRequests(self, new_chat_request):
         self.__chat_requests.append(new_chat_request)
+    #Mutatoe to remove a client from the chat requests
+    def removeChatRequest(self,name):
+        self.__chat_requests.remove(name)
+
 
         #Mutator to set in_chat variable to True
     def setInChat(self):

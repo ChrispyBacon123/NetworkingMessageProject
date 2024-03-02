@@ -527,8 +527,6 @@ def start_chat(connectionSocket,clientIndex):
             connectionSocket.send(output.encode())
             connectionSocket.recv(1024).decode()
             
-            
-            
     # Maybe implement this (bring it back to main menu after chat ends)   
     main_Menu(connectionSocket,clientIndex)
 
@@ -647,6 +645,12 @@ def chat_requests(connectionSocket,clientIndex):
         connectionSocket.send(output.encode())
         # This line is CRUCIAL to ensure that the 'I'message and 'S'message are not sent together as one string
         connectionSocket.recv(1024).decode()
+        
+        # Removing the chosen client from the array
+        clientsList[clientIndex].removeChatRequest(peerName)
+
+        # Taking the user back to the main menu
+        main_Menu(connectionSocket,clientIndex)
 
     
     
