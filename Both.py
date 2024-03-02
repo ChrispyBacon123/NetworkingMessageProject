@@ -64,49 +64,52 @@ def create_Header(messageType,body):
     return out
 
 
-def letter_Counter_Validation(size,body):
-    """Given the body of the message and the supposed number of characters in the message,
-    This method checks if the two correspond
-    This method will return true if the message passes the validation check"""
-    messageList = list(body)
-    if size == len(messageList):
-        return True
-    else:
-        return False
+# def letter_Counter_Validation(size,body):
+#     """Given the body of the message and the supposed number of characters in the message,
+#     This method checks if the two correspond
+#     This method will return true if the message passes the validation check"""
+#     messageList = list(body)
+#     if size == len(messageList):
+#         return True
+#     else:
+#         return False
 
-def check_Message(message,size,body,chatNo):
-    """This method applies all the checks as per the protocol to ensure that
-    the entire message has been delivered uncorrupted it will return true if the message is correct"""
-    global recievedCounter
-    correct = False
-    # Checks to see if header got corrupted
-    if message[:1] not in "MISXARP":
-        mssg = create_Header("R",num)
-        correct=False
+# def check_Message(message,size,body,chatNo):
+#     """This method applies all the checks as per the protocol to ensure that
+#     the entire message has been delivered uncorrupted it will return true if the message is correct"""
+#     global recievedCounter
+#     correct = False
+#     # Checks to see if header got corrupted
+#     print("We got to 83")
+#     if message[:1] not in "MISXARP":
+#         mssg = create_Header("R",num)
+#         correct=False
     
-    # Checks to see if message number did not get corrupted
-    if message[11]!= "*" and message[:1]=="C":
-        correct=False
-        # mssg = create_Header("R",num)
-        # server.sendto(mssg.encode(),(SENDER_IP,6969))
-    # Checks to see if any messages were lost in their entirety
-    if recievedCounter!=chatNo and recievedCounter<chatNo:
-        correct = False
-        for i in range(recievedCounter,chatNo):
-            num = str(i)
-            while len(num)<4:
-                num= "0"+num
-            # mssg= create_Header("R",num)
-            # server.sendto(mssg.encode(),(SENDER_IP,6969))
+#     print("We got to 88")
+#     # Checks to see if message number did not get corrupted
+#     if message[11]!= "*" and message[:1]=="C":
+#         correct=False
+#         # mssg = create_Header("R",num)
+#         # server.sendto(mssg.encode(),(SENDER_IP,6969))
+#     # Checks to see if any messages were lost in their entirety
+#     print("We got to 95")
+#     if recievedCounter!=chatNo and recievedCounter<chatNo:
+#         correct = False
+#         for i in range(recievedCounter,chatNo):
+#             num = str(i)
+#             while len(num)<4:
+#                 num= "0"+num
+#             # mssg= create_Header("R",num)
+#             # server.sendto(mssg.encode(),(SENDER_IP,6969))
 
-
-    # Checks to see if the body of the message was corrupted
-    if not letter_Counter_Validation(size,body):
-        # mssg = create_Header("R",chatNo)
-        # server.sendto(mssg.encode(),(SENDER_IP,6969))
-        correct = False
+#     print("We got to 105")
+#     # Checks to see if the body of the message was corrupted
+#     if not letter_Counter_Validation(size,body):
+#         # mssg = create_Header("R",chatNo)
+#         # server.sendto(mssg.encode(),(SENDER_IP,6969))
+#         correct = False
     
-    return correct
+#     return correct
 
 
 # Fix Resend Header
@@ -143,17 +146,17 @@ def recieve():
                 size = int(message[1:5])
                 chatNo = message[7:10]
                 body = message[11:]
-                if check_Message(message,size,body,chatNo):
+                # if True:
                     # We don't need to send an acknowledgement for an acknowledgement
-                    if header[:1] == 'A':
-                        acknowledged = True
-                    else:
-                        message = create_Chat_Header("A","",chatNo) # Sends acknowledgement for the chat number so that the sender knows which message this is for        
-                        server.sendto(message.encode(),(SENDER_IP,6969))
-                        print(body)
-                else: 
-                    resendThread = threading.Thread(target=resend_Message(chatNo)) 
-                    resendThread.start()
+                    # if header[:1] == 'A':
+                    #     acknowledged = True
+                    # else:
+                    #     message = create_Chat_Header("A","",chatNo) # Sends acknowledgement for the chat number so that the sender knows which message this is for        
+                    #     server.sendto(message.encode(),(SENDER_IP,6969))
+                print(body)
+                # else: 
+                #     resendThread = threading.Thread(target=resend_Message(chatNo)) 
+                #     resendThread.start()
         except:
             pass
 
