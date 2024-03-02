@@ -647,7 +647,7 @@ def chat_requests(connectionSocket,clientIndex):
         connectionSocket.recv(1024).decode()
         
         # Removing the chosen client from the array
-        clientsList[clientIndex].removeChatRequest(peerName)
+        # clientsList[clientIndex].removeChatRequest(peerName)
 
         # Taking the user back to the main menu
         main_Menu(connectionSocket,clientIndex)
