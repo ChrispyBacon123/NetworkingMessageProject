@@ -24,7 +24,7 @@ class Client:
     def getStatus(self):
         return self.__status
     
-    #Accessor to get the IP address
+    #Accessor to get the IP address 
     def getIP(self):
         return self.__IP_add
     
