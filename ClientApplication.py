@@ -37,8 +37,13 @@ def request_retransmission(socket, IP, port):
 # The flag is to keep track of whether you have started a chat or you accepted a chat request: 
 # True = you started the chat; False = you accepted a request
 
+NAME = ""
+sentCounter = 0
+messages = [" "] # Made the first message empty so the indexes would correspond to the message number 
+acknowledged = False
 
-def create_Header(messageType,body):
+
+def create_Chat_Header(messageType,body,chatNo):
     """Given the type of message and the body, this method will return a header for the message
     and return the message with the header attactched"""
 
@@ -50,60 +55,109 @@ def create_Header(messageType,body):
     size = str(len(arr))
 
     # Padding if the size of the message is less than 1000 characters
-    while(len(size)<4):
+    while len(size)<4:
         size = "0"+size
-    '''
+
     # Padding if the size of the number is less than 1000
-    while (len(chatNo)<4):
-        chatNoS = "0"+chatNo
-    '''
+    chatNoS=""+chatNo
+    while len(chatNoS)<4:
+        chatNoS = "0"+chatNoS
     #Attatching the body
     out = out+size+'*'+chatNoS+'*'+body
     return out
 
+def create_Header(messageType,body):
+    """Given the type of message and the body, this method will return a header for the message
+    and return the message with the header attactched"""
+    # Attatching the header 
+    out = messageType
 
-def receive():
-   while True:
+    # Determining the size of the message
+    arr = list(body)
+    size = str(len(arr))
+
+    # Padding if the size of the message is less than 1000 characters
+    while(len(size)<4):
+        size = "0"+size
+    #Attatching the body
+    out = out+size+body
+    return out
+
+
+def receive(user_IP, user_port):
+    serverSocket = socket(AF_INET, SOCK_DGRAM)
+    serverSocket.bind(('', user_port))
+    disconnect = False
+    global acknowledged
+    while not disconnect:
         try:
-            message, _ = server.recvfrom(1024)
-            print(message)
-
+                message, _ = serverSocket.recvfrom(1024)
+                message = message.decode()
+                header = message[:5]
+                size = int(message[1:5])
+                chatNo = message[7:10]
+                body = message[11:]
+                # if True:
+                    # We don't need to send an acknowledgement for an acknowledgement
+                    # if header[:1] == 'A':
+                    #     acknowledged = True
+                    # else:
+                    #     message = create_Chat_Header("A","",chatNo) # Sends acknowledgement for the chat number so that the sender knows which message this is for        
+                    #     server.sendto(message.encode(),(SENDER_IP,6969))
+                print(body)
+                # else: 
+                #     resendThread = threading.Thread(target=resend_Message(chatNo)) 
+                #     resendThread.start()
         except:
             pass
 
 
-def send(IP, port):
-    while True:
+def send(peer_IP, peer_port):
+    clientSocket = socket(AF_INET, SOCK_DGRAM)
+    global sentCounter
+    global messages
+    disconnect = False
+    while not disconnect:
         message = input("")
         if message == "DISCONNECT":
-            message = ''
-            message = create_Header("X",message)
-            server.sendto(message.encode(),(IP, port))
+            disconnect = True
+            message = create_Chat_Header("C",f"{NAME} has ended the chat",chatNo)         
+            clientSocket.sendto(message.encode(),(peer_IP, peer_port))
         else:
-            message = "You: "+message
-            message = create_Header("C",message)
-            server.sendto(message.encode(),(IP, port))
+            # chatNo = str(sentCounter)
+            # while len(chatNo)<4:
+            #     chatNo="0"+chatNo
+            sentCounter+=1
+            chatNo = str(sentCounter)
+
+            # Adding message to the messages array 
+            message = create_Chat_Header("C",message,chatNo)      
+            messages.append(message)
+            clientSocket.sendto(message.encode(),(peer_IP, peer_port))
+
 
 
 #def create_chat(name, IP, port, chat_request_flag):
-def create_chat(name, IP, port):
+def create_chat(peer_name, peer_IP, peer_port, user_port, user_IP):
     '''If you started the chat then you will send the first message and the user who accepted the chat request
     will have to wait to receive that message first'''
-    chatSocket = socket(AF_INET, SOCK_DGRAM)
-    port = int(port) # ensure port is int
-    chatSocket.bind((IP, port))
+    
+    peer_port = int(peer_port) # ensure port is int
+    user_port = int(user_port)
+    
     print("To leave the chat enter 'DISCONNECT'")
 
     msg = '' # Initialising the msg variable for the while loop condition
     timeout_count = 0 # Keeping track of how many times a timeout has occured
     timeout_flag = False # This flag becomes true when there have been 3 timeouts and the connection is terminated
 
-    t1 = threading.Thread(target=receive)
-    t2 = threading.Thread(target=send, args=(IP, port))
+    recThread = threading.Thread(target=receive, args=(user_IP, user_port))
+    sendThread = threading.Thread(target=send, args=(peer_IP, peer_port))
 
-    t1.start()
-    t2.start()
+    recThread.start()
+    sendThread.start()
     print("threads have started")
+
     '''
     # If you started the chat then you send the first message
     # This is just to send the initial message, all messages thereafter will be sent in the while loop
@@ -164,7 +218,7 @@ def create_chat(name, IP, port):
 def main():
     #----------- Client to Server -----------#
     #Using TCP
-    serverName = '192.168.101.217'
+    serverName = '192.168.101.250'
     serverPort = 6969
     clientSocket = socket(AF_INET,SOCK_STREAM)
     clientSocket.connect((serverName,serverPort))
@@ -224,7 +278,9 @@ def main():
                 peer_name = user_data[0]
                 peer_IP = user_data[1]
                 peer_port = user_data[2]
-                create_chat(peer_name, peer_IP, peer_port)
+                user_port = user_data[3]
+                user_IP = user_data[4]
+                create_chat(peer_name, peer_IP, peer_port, user_port, user_IP)
                 #create_chat(peer_name, peer_IP, peer_port, True)
                 continue
             elif header[:1] == 'P': # Request for new chat

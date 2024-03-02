@@ -9,7 +9,7 @@ from ClientClass import *
 # clientsList =[]
 # Lock to synchronize clientsList
 lock = threading.Lock()
-FOLDER_PATH = r"C:\Users\rlaal\OneDrive - University of Cape Town\2024\CSC3002F\Assignment 1\Disscord Clients"
+FOLDER_PATH = "/Users/CrispyBacon/Desktop/Disscord Clients/"
 ipSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 ipSocket.connect(("8.8.8.8", 80))
 ipAddress = ipSocket.getsockname()[0]
@@ -506,7 +506,7 @@ def start_chat(connectionSocket,clientIndex):
             # This line is CRUCIAL to ensure that the 'I'message and 'S'message are not sent together as one string
             connectionSocket.recv(1024).decode()
             
-            while user.getInChat() == False: # prints dots ... till peer accepts the request
+            while not clientsList[clientIndex].getInChat(): # prints dots ... till peer accepts the request
                 print_dots(connectionSocket)
             
             message = chosenClient.getName() + " accepted! Starting the chat:\n"
@@ -515,18 +515,21 @@ def start_chat(connectionSocket,clientIndex):
             connectionSocket.recv(1024).decode()
 
             # start chat now
+            peerName = chosenClient.getName()
             peerIP = chosenClient.getIP()
             peerPort = chosenClient.getUDPPort()
-            peerName = chosenClient.getName()
-            message= str(peerName)+" "+str(peerIP)+" "+str(peerPort)
+            userPort = user.getUDPPort()
+            userIP = user.getIP()
+            
+            message= str(peerName)+" "+str(peerIP)+" "+str(peerPort)+" " + str(userPort) + " " + str(userIP)
+            print(user.getName() + " is starting chat\n")
             output = create_Header("S",message)
             connectionSocket.send(output.encode())
             connectionSocket.recv(1024).decode()
             
             
             
-            # Maybe implement this (bring it back to main menu after chat ends)
-       
+    # Maybe implement this (bring it back to main menu after chat ends)   
     main_Menu(connectionSocket,clientIndex)
 
 
@@ -597,6 +600,8 @@ def chat_requests(connectionSocket,clientIndex):
         exitmessage = "Directing back to main menu.\n"
         exitmessage = create_Header("I", exitmessage)
         connectionSocket.send(exitmessage.encode())
+        connectionSocket.recv(1024).decode()
+        main_Menu(connectionSocket,clientIndex)
         
     else:
         output = "Please enter the number of the person you want to chat! (BACK to cancel)\n"
@@ -621,21 +626,23 @@ def chat_requests(connectionSocket,clientIndex):
 
         index =0
         for i in range(len(clientsList)):
-            if clientsList[i]==peerName:
+            if clientsList[i].getName()==peerName:
                 index = i
                 break
 
+        print(peerName + "was accepted\n")
         clientsList[index].setInChat()
-        print(clientsList[index].toString())
 
-        user = clientsList[clientIndex]
+        peer = clientsList[index]
         
         # start chat now
-        username = user.getName()
-        userIP = user.getIP()
-        userPort = user.getUDPPort()
+        peername = peer.getName()
+        peerIP = peer.getIP()
+        peerPort = peer.getUDPPort()
+        userPort = clientsList[clientIndex].getUDPPort()
+        userIP = clientsList[clientIndex].getIP()
         
-        message= str(username)+" "+str(userIP)+" "+str(userPort)
+        message= str(peername)+" "+str(peerIP)+" "+str(peerPort)+" "+str(userPort)+" "+str(userIP)+" "+str(peerName)
         output = create_Header("S",message)
         connectionSocket.send(output.encode())
         # This line is CRUCIAL to ensure that the 'I'message and 'S'message are not sent together as one string
