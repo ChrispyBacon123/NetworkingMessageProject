@@ -640,7 +640,7 @@ def chat_requests(connectionSocket,clientIndex):
         userPort = clientsList[clientIndex].getUDPPort()
         userIP = clientsList[clientIndex].getIP()
         
-        message= str(peername)+" "+str(peerIP)+" "+str(peerPort)+" "+str(userPort)+" "+str(userIP)+" "+str(peerName)
+        message= str(peername)+" "+str(peerIP)+" "+str(peerPort)+" "+str(userPort)+" "+str(userIP)
         output = create_Header("S",message)
         connectionSocket.send(output.encode())
         # This line is CRUCIAL to ensure that the 'I'message and 'S'message are not sent together as one string

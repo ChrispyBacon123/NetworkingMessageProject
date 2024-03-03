@@ -158,60 +158,7 @@ def create_chat(peer_name, peer_IP, peer_port, user_port, user_IP):
     sendThread.start()
     print("threads have started")
 
-    '''
-    # If you started the chat then you send the first message
-    # This is just to send the initial message, all messages thereafter will be sent in the while loop
-    if chat_request_flag:
-        msg = input('You: ') # The message to send to the other client
-        msg_with_header = create_Header('C', msg) # Adding the header to the message
-        chatSocket.sendto(msg_with_header.encode(), (IP, port)) # sending the message with the header to the peer
 
-    while msg.upper() != 'DISCONNECT': # The upper() method is used to make the condition case insensitive
-
-        try:
-            # Receive data from the socket
-            response, peerAddress = chatSocket.recvfrom(2048) # saving the response from the peer to response, peerAddress is not used
-            header = response.decode()[:5] # saving just the header
-
-            # If data is received before timeout
-            if header[:1] == 'C': # The response is a chat message
-                modifiedMessage = response.decode()[5:] # taking off the header
-                print(name + ': ' + modifiedMessage) # Showing the response from the peer
-                msg = input('You: ') # Next message
-                continue
-            elif header[:1] == 'A': # This is not the response from the peer but just an acknowledgement 
-                continue
-            elif header[:1] == 'R': # This means the chat message was not sent or was corrupted and the peer has requested you to re-send it
-                chatSocket.sendto(msg_with_header.encode(), (IP, port)) # re-sending the message
-                continue
-
-            msg_with_header = create_Header('C', msg) # Adding the header to the message
-        
-            chatSocket.sendto(msg_with_header.encode(), (IP, port)) # sending the message with the header to the peer
-
-            start_time = time.time()
-            chatSocket.settimeout(30)  # 30 seconds timeout
-
-        except timeout:
-            # If timeout occurs
-            timeout_count += 1 # Increasing the timeout counter
-            if timeout_count == 3:
-                print("Peer unresponsive, terminating connection")
-                timeout_flag = True # Too many timeouts have occured so the connection must be terminated
-                break # Breaking out of the loop so that the connection is terminated   
-            elapsed_time = time.time() - start_time
-            print("Timeout occurred after", elapsed_time, "seconds") # Telling the user that a timeout has occurred
-
-            # After timeout occurs then a request is sent to the peer to resend the message
-            request_retransmission(chatSocket, IP, port)
-            print("Re-transmission request has been sent")
-
-
-    if timeout_flag == False:
-        # This message must not be printed if the connection is being terminated because there were too many timeouts
-        chatSocket.sendto(('Peer has left the chat').encode(), (IP, port))
-    chatSocket.close() # Terminate the connection to the peer
-    '''
 # Add some way to get back to menu
 
 # Main function
