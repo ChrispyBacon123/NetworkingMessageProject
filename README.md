@@ -25,7 +25,7 @@ To run the program, follow these steps:
 
  3. Start the Server.py Program (This can be done by running the command: `Python3 Server.py`) in your terminal 
 
- 4. Copy the IP adress and port number that the Server.py Program is listening on (the adress will be printed in the format "Listening on <IP address>:<Port Number>)
+ 4. Copy the IP address and port number that the Server.py Program is listening on (the address will be printed in the format "Listening on <IP address>:<Port Number>)
 
  5. Paste the IP value into the variable <serverName> and the Port value into the variable <serverPort> which are found shortly after the line "#----------- Client to Server -----------#" 
 
