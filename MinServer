@@ -9,7 +9,7 @@ from ClientClass import *
 # clientsList =[]
 # Lock to synchronize clientsList
 lock = threading.Lock()
-FOLDER_PATH = r"C:\Users\rlaal\OneDrive - University of Cape Town\2024\CSC3002F\Assignment 1\Disscord Clients"
+FOLDER_PATH = r"C:/Users/user-pc/Desktop/Datcord Clients/" # this needs to be changed on a different machine
 ipSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 ipSocket.connect(("8.8.8.8", 80))
 ipAddress = ipSocket.getsockname()[0]
@@ -101,9 +101,10 @@ def save_Client(client):
     """Saves the clients details into a text file stored on the server machine"""
     try:
         # File path to save details of the client
-        file_name = FOLDER_PATH+client.getName()+".txt"
-        print(file_name)
-        SystemExit()
+        file_name = "Datcord Client "+client.getName()+".txt"
+        
+        #print(file_name)
+        #SystemExit()
         file = open(file_name,"w")
 
         # Writing data to client's file
@@ -364,6 +365,7 @@ def sign_up(connectionSocket,addr):
     message = "You have been sucessfully registered, please enjoy Datcord\n\n"
     message = create_Header("I",message)
     connectionSocket.send(message.encode())
+    connectionSocket.recv(1024).decode()
     return len(clientsList)-1
 
 
@@ -527,8 +529,9 @@ def start_chat(connectionSocket,clientIndex):
             output = create_Header("S",message)
             connectionSocket.send(output.encode())
             connectionSocket.recv(1024).decode()
+            break
             
-    # Maybe implement this (bring it back to main menu after chat ends)   
+    # back to main menu   
     main_Menu(connectionSocket,clientIndex)
 
 
@@ -648,24 +651,14 @@ def chat_requests(connectionSocket,clientIndex):
         # This line is CRUCIAL to ensure that the 'I'message and 'S'message are not sent together as one string
         connectionSocket.recv(1024).decode()
         
-    # Removing the chosen client from the array
-    # clientsList[clientIndex].removeChatRequest(peerName)
-
     # Taking the user back to the main menu
+    exitmessage = "Directing back to main menu.\n"
+    exitmessage = create_Header("I", exitmessage)
+    connectionSocket.send(exitmessage.encode())
+    connectionSocket.recv(1024).decode()
+
+
     main_Menu(connectionSocket,clientIndex)
-
-    
-    
-    # after the chat ends
-    #exitmessage = "Directing back to main menu.\n"
-    #exitmessage = create_Header("I", exitmessage)
-    #connectionSocket.send(exitmessage.encode())
-    
-    # This line is CRUCIAL to ensure that the 'I'message and 'S'message are not sent together as one string
-    #connectionSocket.recv(1024).decode()
-
-    #clientsList[index].setNotInChat()
-    #main_Menu(connectionSocket,clientIndex)
     
 
 def main_Menu(connectionSocket,clientIndex):
